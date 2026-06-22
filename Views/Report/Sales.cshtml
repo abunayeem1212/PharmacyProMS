@@ -1,0 +1,228 @@
+﻿@model IEnumerable<PharmacyProMS.Models.SaleInvoice>
+@{
+    ViewBag.Title = "Sales Report";
+}
+
+<div class="page-header d-print-none">
+    <div>
+        <h4>
+            <i class="fas fa-chart-bar me-2"
+               style="color:#1a8a5a"></i>
+            Sales Report
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Sales Report
+            </li>
+        </ol>
+    </div>
+    <button onclick="window.print()"
+            class="btn btn-outline-primary">
+        <i class="fas fa-print me-1"></i> Print
+    </button>
+
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("ExportSalesExcel",
+        new { dateFrom = ViewBag.DateFrom,
+              dateTo   = ViewBag.DateTo })"
+           class="btn btn-success">
+            <i class="fas fa-file-excel me-1"></i>
+            Export Excel
+        </a>
+        <button onclick="window.print()"
+                class="btn btn-outline-primary">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+    </div>
+</div>
+
+@* Filter *@
+<div class="card mb-3 d-print-none">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Sales", "Report",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Date From
+                </label>
+                <input type="date" name="dateFrom"
+                       class="form-control"
+                       value="@ViewBag.DateFrom" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Date To
+                </label>
+                <input type="date" name="dateTo"
+                       class="form-control"
+                       value="@ViewBag.DateTo" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn btn-primary w-100 mt-3">
+                    <i class="fas fa-filter me-1"></i>
+                    Generate
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@* Summary *@
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #1a8a5a">
+            <div style="font-size:22px;font-weight:700;
+                        color:#1a8a5a">
+                @ViewBag.InvoiceCount
+            </div>
+            <div class="text-muted small">Total Invoices</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #2196f3">
+            <div style="font-size:20px;font-weight:700;
+                        color:#2196f3">
+                
+                ৳ @String.Format("{0:N2}", (decimal)ViewBag.TotalSale)
+            </div>
+            <div class="text-muted small">Total Sale</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #ff9800">
+            <div style="font-size:20px;font-weight:700;
+                        color:#ff9800">
+                
+                ৳ @String.Format("{0:N2}", (decimal)ViewBag.TotalDiscount)
+            </div>
+            <div class="text-muted small">Total Discount</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #4caf50">
+            <div style="font-size:20px;font-weight:700;
+                        color:#4caf50">
+               
+                ৳ @String.Format("{0:N2}", (decimal)ViewBag.TotalVat)
+            </div>
+            <div class="text-muted small">Total VAT</div>
+        </div>
+    </div>
+</div>
+
+@* Report Table *@
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-table me-2"></i>
+        Sales Report — @ViewBag.DateFrom to @ViewBag.DateTo
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice No</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Discount</th>
+                    <th>VAT</th>
+                    <th>Net Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="9"
+                            class="text-center py-4 text-muted">
+                            No data found
+                        </td>
+                    </tr>
+                }
+                @{ int i = 1; }
+                @foreach (var inv in Model)
+                {
+                    <tr>
+                        <td>@i</td>
+                        <td class="fw-semibold"
+                            style="color:#1a8a5a">
+                            @inv.InvoiceNumber
+                        </td>
+                        <td>
+                            @inv.SaleDate.ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            @(inv.Customer != null
+                                ? inv.Customer.CustomerName
+                                : inv.WalkInCustomerName
+                                    ?? "Walk-in")
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                @(inv.SaleItems?.Count ?? 0)
+                            </span>
+                        </td>
+                        <td>
+                            ৳ @inv.TotalAmount.ToString("N2")
+                        </td>
+                        <td class="text-danger">
+                            ৳ @inv.Discount.ToString("N2")
+                        </td>
+                        <td class="text-warning">
+                            ৳ @inv.VatAmount.ToString("N2")
+                        </td>
+                        <td class="fw-bold"
+                            style="color:#1a8a5a">
+                            ৳ @inv.NetAmount.ToString("N2")
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+            <tfoot style="background:#f8f9fa;font-weight:700">
+                <tr>
+                    <td colspan="5" class="text-end">Total:</td>
+                    <td>
+                        ৳ @Model.Sum(s => s.TotalAmount).ToString("N2")
+                    </td>
+                    <td class="text-danger">
+                        ৳ @Model.Sum(s => s.Discount).ToString("N2")
+                    </td>
+                    <td class="text-warning">
+                        ৳ @Model.Sum(s => s.VatAmount).ToString("N2")
+                    </td>
+                    <td style="color:#1a8a5a">
+                        ৳ @Model.Sum(s => s.NetAmount).ToString("N2")
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar, .d-print-none {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>

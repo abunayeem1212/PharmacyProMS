@@ -1,0 +1,1532 @@
+﻿@model PharmacyProMS.ViewModels.SaleCreateViewModel
+@{
+    ViewBag.Title = "New Sale Invoice";
+}
+
+<style>
+        /* ─────────────────────────────
+       SEARCH
+    ───────────────────────────── */
+        .med-search-wrap {
+            position: relative
+        }
+
+        .med-search-input {
+            border-radius: 12px !important;
+            border: 2px solid #dee2e6 !important;
+            padding: 13px 50px 13px 48px !important;
+            font-size: 15px !important;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 15px center !important;
+            transition: all 0.2s;
+        }
+
+            .med-search-input:focus {
+                border-color: #1a8a5a !important;
+                box-shadow: 0 0 0 0.2rem rgba(26,138,90,0.15) !important;
+            }
+
+        .search-dd {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            z-index: 9999;
+            max-height: 340px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            display: none;
+        }
+
+            .search-dd.show {
+                display: block
+            }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+            transition: all 0.15s;
+        }
+
+            .search-item:last-child {
+                border-bottom: none
+            }
+
+            .search-item:hover,
+            .search-item.kbd-active {
+                background: #e8f5ee
+            }
+
+        .si-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg,#1a8a5a,#0d5c3a);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .si-info {
+            flex: 1
+        }
+
+        .si-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #222
+        }
+
+        .si-generic {
+            font-size: 12px;
+            color: #888
+        }
+
+        .si-meta {
+            font-size: 11px;
+            color: #aaa
+        }
+
+        .si-right {
+            text-align: right;
+            flex-shrink: 0
+        }
+
+        .si-price {
+            font-weight: 700;
+            color: #1a8a5a;
+            font-size: 16px
+        }
+
+        .si-stock {
+            font-size: 11px;
+            color: #888
+        }
+
+        .si-batch {
+            font-size: 10px;
+            background: #e8f5ee;
+            color: #1a8a5a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .si-expiry-warn {
+            font-size: 10px;
+            background: #fff3e0;
+            color: #e65100;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .search-empty {
+            padding: 25px;
+            text-align: center;
+            color: #aaa;
+        }
+
+        .search-loading {
+            padding: 18px;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .scan-cam-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1a8a5a;
+            color: white;
+            border: none;
+            border-radius: 9px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+            .scan-cam-btn:hover {
+                background: #0d5c3a;
+                transform: translateY(-50%) scale(1.07);
+            }
+
+        /* ─────────────────────────────
+       CART
+    ───────────────────────────── */
+        .cart-empty {
+            text-align: center;
+            padding: 55px 20px;
+            color: #ccc;
+        }
+
+            .cart-empty i {
+                font-size: 55px;
+                display: block;
+                margin-bottom: 15px
+            }
+
+        .cart-table th {
+            background: #f8f9fa;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            padding: 10px 10px;
+            border-bottom: 2px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        .cart-table td {
+            vertical-align: middle;
+            padding: 9px 10px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .cart-table tbody tr:hover {
+            background: #f8fffc
+        }
+
+        .cart-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333
+        }
+
+        .cart-generic {
+            font-size: 11px;
+            color: #888
+        }
+
+        .cart-batch {
+            font-size: 10px;
+            background: #e8f5ee;
+            color: #1a8a5a;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .cart-expiry-warn {
+            font-size: 10px;
+            background: #fff3e0;
+            color: #e65100;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .qty-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .qty-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            border: 1px solid #dee2e6;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #555;
+            transition: all 0.15s;
+        }
+
+            .qty-btn:hover {
+                background: #1a8a5a;
+                color: white;
+                border-color: #1a8a5a;
+            }
+
+        .qty-inp {
+            width: 70px !important;
+            text-align: center !important;
+            font-weight: 700 !important;
+            border-radius: 7px !important;
+            font-size: 13px !important;
+        }
+
+        .price-inp {
+            width: 80px !important;
+            text-align: right !important;
+            border-radius: 7px !important;
+            font-size: 13px !important;
+        }
+
+        .disc-inp {
+            width: 65px !important;
+            text-align: right !important;
+            border-radius: 7px !important;
+            font-size: 13px !important;
+        }
+
+        /* ─────────────────────────────
+       SUMMARY
+    ───────────────────────────── */
+        .sum-panel {
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .sum-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 0;
+            font-size: 14px;
+            border-bottom: 1px dashed #eee;
+        }
+
+            .sum-row:last-child {
+                border-bottom: none
+            }
+
+        .sum-total {
+            border-top: 2px solid #1a8a5a !important;
+            border-bottom: none !important;
+            padding-top: 12px !important;
+            margin-top: 5px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a8a5a;
+        }
+
+        /* Payment Methods */
+        .pay-btn {
+            flex: 1;
+            padding: 9px 5px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+            .pay-btn.active {
+                border-color: #1a8a5a;
+                background: #e8f5ee;
+                color: #1a8a5a;
+            }
+
+        /* Change Calc */
+        .change-calc {
+            background: #e8f5ee;
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid #a8e6cf;
+        }
+
+        .change-big {
+            font-size: 28px;
+            font-weight: 900;
+            color: #1a8a5a;
+            text-align: center;
+        }
+
+        /* Credit */
+        .credit-card {
+            border: 2px dashed #ff9800;
+            border-radius: 12px;
+            padding: 14px;
+            background: #fff9f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .credit-card.on {
+                background: #fff3e0;
+                border-style: solid;
+            }
+
+        /* Dark Mode */
+        body.dark-mode .search-dd {
+            background: #1e1e2d;
+            border-color: #2a2a35
+        }
+
+        body.dark-mode .search-item {
+            border-color: #2a2a35
+        }
+
+            body.dark-mode .search-item:hover {
+                background: #252535
+            }
+
+        body.dark-mode .si-name {
+            color: #e0e0e0
+        }
+
+        body.dark-mode .cart-table th {
+            background: #1e1e2d;
+            color: #888
+        }
+
+        body.dark-mode .cart-table td {
+            border-color: #2a2a35
+        }
+
+        body.dark-mode .cart-table tbody tr:hover {
+            background: #1a2920
+        }
+
+        body.dark-mode .sum-panel {
+            background: #1e1e2d
+        }
+
+        body.dark-mode .sum-row {
+            border-color: #2a2a35
+        }
+
+        body.dark-mode .pay-btn {
+            background: #1e1e2d;
+            border-color: #2a2a35;
+            color: #ccc
+        }
+
+            body.dark-mode .pay-btn.active {
+                background: #1a2920;
+                border-color: #1a8a5a;
+                color: #4db882
+            }
+
+        body.dark-mode .change-calc {
+            background: #1a2920;
+            border-color: #2a4a35
+        }
+
+        body.dark-mode .change-big {
+            color: #4db882
+        }
+
+        body.dark-mode .credit-card {
+            background: #2d2010;
+            border-color: #ff9800
+        }
+</style>
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-file-invoice me-2"
+               style="color:#1a8a5a"></i>
+            New Sale Invoice
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Sales</a>
+            </li>
+            <li class="breadcrumb-item active">New</li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Index")"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+@using (Html.BeginForm("Create", "Sale",
+    FormMethod.Post, new { id = "saleForm" }))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="itemsJson" name="ItemsJson" />
+    <input type="hidden" name="InvoiceNumber"
+           value="@Model.InvoiceNumber" />
+    <input type="hidden" name="VatPercentage"
+           value="@Model.VatPercentage" />
+    <input type="hidden" id="isCreditH"
+           name="IsCreditSale" value="false" />
+    <input type="hidden" id="paidAmtH"
+           name="PaidAmount" value="0" />
+    <input type="hidden" id="payMethodH"
+           name="PaymentMethod" value="Cash" />
+
+    <div class="row g-3">
+
+        @* ══════ LEFT ══════ *@
+        <div class="col-xl-8 col-lg-7">
+
+            @* Invoice Header *@
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label
+                                      fw-semibold small
+                                      text-muted mb-1">
+                                INVOICE NO
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-hashtag
+                                           text-muted
+                                           small"></i>
+                                </span>
+                                <input type="text"
+                                       class="form-control fw-bold"
+                                       value="@Model.InvoiceNumber"
+                                       readonly
+                                       style="background:#f8f9fa" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label
+                                      fw-semibold small
+                                      text-muted mb-1">
+                                DATE
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-calendar
+                                           text-muted small"></i>
+                                </span>
+                                @Html.TextBoxFor(m => m.SaleDate,
+                                    new
+                                         {
+                                             @class = "form-control",
+                                          type = "date"
+                                         })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label
+                                      fw-semibold small
+                                      text-muted mb-1">
+                                CUSTOMER
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-user
+                                           text-muted small"></i>
+                                </span>
+                                @Html.DropDownListFor(
+                                    m => m.CustomerId,
+                                    new SelectList(
+                                        Model.Customers,
+                                        "CustomerId",
+                                        "CustomerName"),
+                                    "Walk-in",
+                                    new
+                                         {
+                                             @class = "form-select",
+                                          id = "custDdl"
+                                         })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Search *@
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <div class="med-search-wrap">
+                        <input type="text"
+                               id="medSearch"
+                               class="form-control
+                                  med-search-input"
+                               placeholder="Search medicine by name, generic name or scan barcode..."
+                               autocomplete="off" />
+                        <button type="button"
+                                class="scan-cam-btn"
+                                onclick="openCam()"
+                                title="Camera Scan">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <div class="search-dd" id="searchDd"></div>
+                    </div>
+                    <div class="d-flex gap-3 mt-2 flex-wrap">
+                        <small class="text-muted">
+                            <i class="fas fa-keyboard me-1"></i>
+                            Type to search
+                        </small>
+                        <small class="text-muted">
+                            <kbd>↑</kbd><kbd>↓</kbd>
+                            Navigate
+                        </small>
+                        <small class="text-muted">
+                            <kbd>Enter</kbd> Add
+                        </small>
+                        <small class="text-muted">
+                            <i class="fas fa-barcode me-1"></i>
+                            USB scanner supported
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            @* Cart *@
+            <div class="card">
+                <div class="card-header d-flex
+                        justify-content-between
+                        align-items-center">
+                    <span>
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Cart
+                        <span class="badge ms-1"
+                              id="cartBadge"
+                              style="background:#e8f5ee;
+                                 color:#1a8a5a">
+                            0 items
+                        </span>
+                    </span>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            id="clearBtn"
+                            onclick="clearAll()"
+                            style="display:none">
+                        <i class="fas fa-trash me-1"></i>
+                        Clear
+                    </button>
+                </div>
+                <div class="card-body p-0">
+
+                    @* Empty *@
+                    <div class="cart-empty" id="cartEmpty">
+                        <i class="fas fa-shopping-basket"></i>
+                        <p class="fw-semibold">Cart is empty</p>
+                        <p class="text-muted small">
+                            Search medicine above to add
+                        </p>
+                    </div>
+
+                    @* Table *@
+                    <div id="cartWrap" style="display:none">
+                        <div class="table-responsive">
+                            <table class="cart-table table
+                                      mb-0 w-100">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Medicine</th>
+                                        @*<th class="text-center">
+                                            Batch / Expiry
+                                        </th>*@
+                                        <th class="text-center">
+                                            Qty
+                                        </th>
+                                        <th class="text-end">
+                                            Price
+                                        </th>
+                                        <th class="text-end">
+                                            Disc/unit
+                                        </th>
+                                        <th class="text-end">
+                                            Subtotal
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ══════ RIGHT ══════ *@
+        <div class="col-xl-4 col-lg-5">
+
+            @* Summary *@
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    <i class="fas fa-calculator me-2"></i>
+                    Summary
+                </div>
+                <div class="card-body">
+                    <div class="sum-panel">
+                        <div class="sum-row">
+                            <span class="text-muted">Subtotal</span>
+                            <span id="sSubtotal">৳ 0.00</span>
+                        </div>
+                        <div class="sum-row">
+                            <span class="text-muted">
+                                Item Discounts
+                            </span>
+                            <span id="sItemDisc"
+                                  class="text-danger">
+                                − ৳ 0.00
+                            </span>
+                        </div>
+                        <div class="sum-row">
+                            <span class="text-muted">
+                                Invoice Discount (৳)
+                            </span>
+                            <input type="number"
+                                   name="Discount"
+                                   id="invDisc"
+                                   class="form-control
+                                      form-control-sm
+                                      text-end"
+                                   style="width:90px;
+                                      border-radius:8px"
+                                   min="0" step="0.01"
+                                   value="0"
+                                   oninput="calc()" />
+                        </div>
+                        @if (Model.VatPercentage > 0)
+                        {
+                            <div class="sum-row">
+                                <span class="text-muted">
+                                    VAT (@Model.VatPercentage%)
+                                </span>
+                                <span id="sVat">৳ 0.00</span>
+                            </div>
+                        }
+                        <div class="sum-row sum-total">
+                            <span>TOTAL</span>
+                            <span id="sTotal">৳ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Payment *@
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Payment
+                </div>
+                <div class="card-body">
+
+                    @* Method Buttons *@
+                    <div class="d-flex gap-2 mb-3">
+                        @foreach (var pm in new[] {
+                        new{v="Cash",  ic="fa-money-bill-wave"},
+                        new{v="bKash", ic="fa-mobile-alt"},
+                        new{v="Nagad", ic="fa-mobile-alt"},
+                        new{v="Card",  ic="fa-credit-card"}
+                    })
+                        {
+                            <button type="button"
+                                    class="pay-btn
+                                    @(pm.v=="Cash"
+                                        ? "active" : "")"
+                                    onclick="selPay(
+                                    '@pm.v',this)">
+                                <i class="fas @pm.ic
+                                       d-block mb-1"></i>
+                                @pm.v
+                            </button>
+                        }
+                    </div>
+
+                    @* Cash Change Calculator *@
+                    <div id="changCalcWrap" class="mb-3">
+                        <label class="form-label
+                                  fw-semibold small">
+                            Cash Received (৳)
+                        </label>
+                        <input type="number"
+                               id="cashRecv"
+                               class="form-control mb-2"
+                               min="0" step="0.01"
+                               placeholder="Enter cash amount"
+                               oninput="calcChange()" />
+                        <div class="change-calc"
+                             id="changeBox"
+                             style="display:none">
+                            <div class="text-muted small
+                                    text-center mb-1">
+                                Change to Return
+                            </div>
+                            <div class="change-big"
+                                 id="changeAmt">
+                                ৳ 0.00
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Credit Toggle *@
+                    <div class="credit-card"
+                         id="creditCard"
+                         onclick="toggleCredit()">
+                        <div class="d-flex align-items-center
+                                justify-content-between">
+                            <div>
+                                <i class="fas fa-credit-card
+                                       me-2 text-warning"></i>
+                                <strong>Credit Sale</strong>
+                                <br />
+                                <small class="text-muted">
+                                    Customer pays later
+                                </small>
+                            </div>
+                            <div class="form-check
+                                    form-switch mb-0">
+                                <input type="checkbox"
+                                       id="creditChk"
+                                       class="form-check-input"
+                                       style="width:42px;
+                                          height:22px"
+                                       onclick="event
+                                       .stopPropagation()" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Credit Section *@
+                    <div id="creditSec"
+                         style="display:none"
+                         class="mt-3 p-3 rounded"
+                         style="background:#fff9f0;
+                            border:1px solid #ffe0b2">
+                        <label class="form-label
+                                  fw-semibold small">
+                            Paid Now (৳)
+                        </label>
+                        <input type="number"
+                               id="creditPaid"
+                               class="form-control mb-2"
+                               min="0" step="0.01"
+                               value="0" placeholder="0.00"
+                               oninput="calcCredit()" />
+                        <div class="d-flex
+                                justify-content-between
+                                p-2 rounded"
+                             style="background:white">
+                            <small class="text-muted">
+                                Due Amount:
+                            </small>
+                            <small class="fw-bold text-danger"
+                                   id="creditDue">
+                                ৳ 0.00
+                            </small>
+                        </div>
+                    </div>
+
+                    @* Note *@
+                    <div class="mt-3">
+                        <label class="form-label
+                                  fw-semibold small">
+                            Note
+                            <span class="text-muted">(Optional)</span>
+                        </label>
+                        @Html.TextBoxFor(m => m.Note,
+                            new
+                                 {
+                                     @class = "form-control",
+                                  placeholder = "Sale note..."
+                                 })
+                    </div>
+                </div>
+            </div>
+
+            @* Submit *@
+            <div class="d-grid gap-2">
+                <button type="submit"
+                        id="submitBtn"
+                        onclick="return prepSale()"
+                        class="btn btn-primary btn-lg"
+                        disabled>
+                    <i class="fas fa-check-circle me-2"></i>
+                    Complete Sale
+                    <span id="totalBtn"
+                          class="badge bg-white text-primary ms-2">
+                        ৳ 0
+                    </span>
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+
+        </div>
+    </div>
+}
+
+@* Camera Modal *@
+<div class="modal fade" id="camModal"
+     tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"
+                 style="background:#1a8a5a;color:white">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    Scan Barcode
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        onclick="closeCam()"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div style="position:relative">
+                    <video id="camVideo"
+                           style="width:100%;border-radius:10px;
+                                  border:3px solid #1a8a5a"
+                           autoplay playsinline></video>
+                    <div style="position:absolute;top:0;left:0;
+                                width:100%;height:3px;
+                                background:#1a8a5a;
+                                animation:scanAnim 2s
+                                linear infinite"></div>
+                </div>
+                <p class="text-center text-muted small mt-2">
+                    <i class="fas fa-circle text-danger me-1
+                               pulse"></i>
+                    Point camera at barcode...
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script>
+// ──────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────
+var cart        = [];
+var rowIdx      = 0;
+var VAT         = @Model.VatPercentage;
+var timer       = null;
+var camStream   = null;
+var scanCool    = false;
+
+// ──────────────────────────────────────────────
+// SEARCH
+// ──────────────────────────────────────────────
+$('#medSearch').on('input', function () {
+    var q = this.value.trim();
+    clearTimeout(timer);
+    if (q.length < 2) { hideDd(); return; }
+    showLoad();
+    timer = setTimeout(function () { search(q); }, 280);
+});
+
+$('#medSearch').on('keydown', function (e) {
+    var items = document.querySelectorAll(
+        '.search-item');
+    var active = document.querySelector(
+        '.search-item.kbd-active');
+    var idx = Array.from(items).indexOf(active);
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        idx = Math.min(idx + 1, items.length - 1);
+        items.forEach(i => i.classList.remove('kbd-active'));
+        if (items[idx]) {
+            items[idx].classList.add('kbd-active');
+            items[idx].scrollIntoView({block:'nearest'});
+        }
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        idx = Math.max(idx - 1, 0);
+        items.forEach(i => i.classList.remove('kbd-active'));
+        if (items[idx]) {
+            items[idx].classList.add('kbd-active');
+            items[idx].scrollIntoView({block:'nearest'});
+        }
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (active) active.click();
+        else if (items.length === 1) items[0].click();
+    } else if (e.key === 'Escape') {
+        hideDd();
+    }
+});
+
+$(document).on('click', function (e) {
+    if (!$(e.target).closest('.med-search-wrap').length)
+        hideDd();
+});
+
+function search(q) {
+    $.get('@Url.Action("SearchMedicine","Medicine")',
+        { term: q },
+        function (data) {
+        var dd = $('#searchDd').empty();
+
+        if (!data || !data.length) {
+            dd.html('<div class="search-empty">'
+                + '<i class="fas fa-search-minus me-2"></i>'
+                + 'No result for "<b>' + q + '</b>"'
+                + '</div>').addClass('show');
+            return;
+        }
+
+        data.forEach(function (m) {
+            var batchInfo = '';
+            if (m.BatchNumber) {
+                batchInfo = '<span class="si-batch">'
+                    + m.BatchNumber + '</span> ';
+                if (m.DaysToExpiry <= 90) {
+                    batchInfo +=
+                        '<span class="si-expiry-warn">'
+                        + 'Exp: ' + m.ExpiryDate
+                        + ' (' + m.DaysToExpiry
+                        + 'd)</span>';
+                } else {
+                    batchInfo +=
+                        '<span class="si-batch">'
+                        + 'Exp: ' + m.ExpiryDate
+                        + '</span>';
+                }
+            }
+
+            var stockClass = m.CurrentStock <= 10
+                ? 'text-danger' : '';
+
+            var item = $('<div class="search-item"></div>');
+            item.html(
+                '<div class="si-icon">'
+                    + '<i class="fas fa-capsules"></i>'
+                + '</div>'
+                + '<div class="si-info">'
+                    + '<div class="si-name">'
+                        + m.MedicineName + '</div>'
+                    + (m.GenericName
+                        ? '<div class="si-generic">'
+                            + m.GenericName + '</div>' : '')
+                    + '<div class="si-meta">'
+                        + m.CompanyName + '</div>'
+                    + (batchInfo
+                        ? '<div class="mt-1">'
+                            + batchInfo + '</div>' : '')
+                + '</div>'
+                + '<div class="si-right">'
+                    + '<div class="si-price">'
+                        + '৳' + parseFloat(m.SalePrice)
+                            .toFixed(2) + '</div>'
+                    + '<div class="si-stock '
+                        + stockClass + '">'
+                        + 'Stock: ' + m.CurrentStock
+                    + '</div>'
+                + '</div>');
+
+            item.on('click', function () {
+                addCart(m);
+                hideDd();
+                $('#medSearch').val('').focus();
+            });
+
+            dd.append(item);
+        });
+
+        dd.addClass('show');
+    });
+}
+
+function showLoad() {
+    $('#searchDd').html(
+        '<div class="search-loading">'
+        + '<i class="fas fa-spinner fa-spin me-2"></i>'
+        + 'Searching...</div>').addClass('show');
+}
+
+function hideDd() {
+    $('#searchDd').removeClass('show');
+}
+
+// ──────────────────────────────────────────────
+// CART
+// ──────────────────────────────────────────────
+function addCart(m) {
+    var ex = cart.find(i => i.id === m.MedicineId);
+
+    if (ex) {
+        if (ex.qty >= m.CurrentStock) {
+            toastr.warning('Max stock: ' + m.CurrentStock);
+            return;
+        }
+        ex.qty++;
+        ex.sub = (ex.qty * ex.price)
+            - (ex.qty * ex.disc);
+        updateRow(ex);
+    } else {
+        var item = {
+            id:    m.MedicineId,
+            rid:   ++rowIdx,
+            name:  m.MedicineName,
+            gen:   m.GenericName || '',
+            price: parseFloat(m.SalePrice),
+            disc:  0,
+            qty:   1,
+            stock: m.CurrentStock,
+            sub:   parseFloat(m.SalePrice),
+            batch: m.BatchNumber || '',
+            exp:   m.ExpiryDate  || '',
+            expD:  m.DaysToExpiry || 999,
+            batchId: m.BatchId || 0,
+            purPrice: m.PurchasePrice || 0
+        };
+        cart.push(item);
+        appendRow(item);
+    }
+
+    calcTotal();
+    updateBadge();
+    beep();
+    toastr.success(m.MedicineName + ' added!',
+        '', { timeOut: 1000 });
+}
+
+function appendRow(it) {
+    $('#cartEmpty').hide();
+    $('#cartWrap').show();
+    $('#clearBtn').show();
+    $('#cartBody').append(buildRow(it));
+}
+
+function buildRow(it) {
+    var batchHtml = '';
+    if (it.batch) {
+        batchHtml = '<span class="cart-batch">'
+            + it.batch + '</span><br>';
+        if (it.expD <= 90 && it.expD >= 0) {
+            batchHtml +=
+                '<span class="cart-expiry-warn">'
+                + it.exp + '</span>';
+        } else {
+            batchHtml +=
+                '<span class="cart-batch">'
+                + it.exp + '</span>';
+        }
+    } else {
+        batchHtml = '<small class="text-muted">—</small>';
+    }
+
+    var sl = cart.indexOf(it) + 1;
+
+    return '<tr id="r' + it.rid + '">'
+        + '<td><small class="text-muted">'
+            + sl + '</small></td>'
+        + '<td>'
+            + '<div class="cart-name">'
+                + it.name + '</div>'
+            + (it.gen
+                ? '<div class="cart-generic">'
+                    + it.gen + '</div>' : '')
+        + '</td>'
+        /*+ '<td class="text-center">' + batchHtml + '</td>'*/
+        + '<td>'
+            + '<div class="qty-wrap">'
+                + '<button type="button" class="qty-btn"'
+                    + ' onclick="chQty(' + it.rid + ',-1)">'
+                    + '−</button>'
+                + '<input type="number" id="q' + it.rid + '"'
+                    + ' class="form-control qty-inp"'
+                    + ' value="' + it.qty + '"'
+                    + ' min="1" max="' + it.stock + '"'
+                    + ' oninput="qtyIn(' + it.rid
+                        + ',this)" />'
+                + '<button type="button" class="qty-btn"'
+                    + ' onclick="chQty(' + it.rid + ',1)">'
+                    + '+</button>'
+            + '</div>'
+        + '</td>'
+        + '<td class="text-end">'
+            + '<input type="number" id="p' + it.rid + '"'
+                + ' class="form-control price-inp"'
+                + ' value="' + it.price.toFixed(2) + '"'
+                + ' min="0" step="0.01"'
+                + ' oninput="prIn(' + it.rid
+                    + ',this)" />'
+        + '</td>'
+        + '<td class="text-end">'
+            + '<input type="number" id="d' + it.rid + '"'
+                + ' class="form-control disc-inp"'
+                + ' value="0" min="0" step="0.01"'
+                + ' placeholder="0.00"'
+                + ' oninput="discIn(' + it.rid
+                    + ',this)"'
+                + ' title="Discount per unit" />'
+        + '</td>'
+        + '<td class="text-end fw-bold"'
+            + ' style="color:#1a8a5a"'
+            + ' id="s' + it.rid + '">'
+            + '৳ ' + it.sub.toFixed(2)
+        + '</td>'
+        + '<td>'
+            + '<button type="button"'
+                + ' class="btn btn-sm btn-outline-danger"'
+                + ' onclick="remRow(' + it.rid + ')">'
+                + '<i class="fas fa-times"></i>'
+            + '</button>'
+        + '</td>'
+    + '</tr>';
+}
+
+function updateRow(it) {
+    $('#q' + it.rid).val(it.qty);
+    $('#s' + it.rid).text('৳ ' + it.sub.toFixed(2));
+}
+
+function chQty(rid, d) {
+    var it = cart.find(i => i.rid === rid);
+    if (!it) return;
+    var nq = it.qty + d;
+    if (nq < 1) { remRow(rid); return; }
+    if (nq > it.stock) {
+        toastr.warning('Max: ' + it.stock);
+        return;
+    }
+    it.qty = nq;
+    it.sub = it.qty * it.price - it.qty * it.disc;
+    updateRow(it);
+    calcTotal();
+}
+
+function qtyIn(rid, inp) {
+    var it = cart.find(i => i.rid === rid);
+    if (!it) return;
+    var q = parseInt(inp.value) || 1;
+    if (q > it.stock) { q = it.stock; inp.value = q; }
+    if (q < 1) q = 1;
+    it.qty = q;
+    it.sub = q * it.price - q * it.disc;
+    $('#s' + rid).text('৳ ' + it.sub.toFixed(2));
+    calcTotal();
+}
+
+function prIn(rid, inp) {
+    var it = cart.find(i => i.rid === rid);
+    if (!it) return;
+    it.price = parseFloat(inp.value) || 0;
+    it.sub   = it.qty * it.price - it.qty * it.disc;
+    $('#s' + rid).text('৳ ' + it.sub.toFixed(2));
+    calcTotal();
+}
+
+function discIn(rid, inp) {
+    var it = cart.find(i => i.rid === rid);
+    if (!it) return;
+    it.disc = parseFloat(inp.value) || 0;
+    it.sub  = it.qty * it.price - it.qty * it.disc;
+    if (it.sub < 0) { it.sub = 0; }
+    $('#s' + rid).text('৳ ' + it.sub.toFixed(2));
+    calcTotal();
+}
+
+function remRow(rid) {
+    cart = cart.filter(i => i.rid !== rid);
+    $('#r' + rid).fadeOut(250, function () {
+        $(this).remove();
+        if (!cart.length) resetCart();
+        // Renumber
+        $('#cartBody tr').each(function (i, tr) {
+            $(tr).find('td:first small').text(i + 1);
+        });
+        calcTotal();
+        updateBadge();
+    });
+}
+
+function clearAll() {
+    if (!confirm('Clear all items from cart?')) return;
+    cart = [];
+    $('#cartBody').empty();
+    resetCart();
+    calcTotal();
+}
+
+function resetCart() {
+    $('#cartEmpty').show();
+    $('#cartWrap, #clearBtn').hide();
+}
+
+function updateBadge() {
+    var units = cart.reduce(
+        function (s, i) { return s + i.qty; }, 0);
+    $('#cartBadge').text(cart.length
+        + ' item' + (cart.length !== 1 ? 's' : '')
+        + ' (' + units + ' units)');
+}
+
+// ──────────────────────────────────────────────
+// CALCULATION
+// ──────────────────────────────────────────────
+function calcTotal() {
+    var raw   = cart.reduce(
+        function (s, i) {
+            return s + i.qty * i.price;
+        }, 0);
+    var iDisc = cart.reduce(
+        function (s, i) {
+            return s + i.qty * i.disc;
+        }, 0);
+    var invDisc = parseFloat(
+        $('#invDisc').val()) || 0;
+    var afterD  = raw - iDisc - invDisc;
+    if (afterD < 0) afterD = 0;
+    var vat     = Math.round(
+        afterD * VAT / 100 * 100) / 100;
+    var total   = afterD + vat;
+
+    $('#sSubtotal').text('৳ ' + raw.toFixed(2));
+    $('#sItemDisc').text('− ৳ ' + iDisc.toFixed(2));
+    $('#sVat').text('৳ ' + vat.toFixed(2));
+    $('#sTotal').text('৳ ' + total.toFixed(2));
+    $('#totalBtn').text('৳ ' + total.toFixed(0));
+
+    $('#submitBtn').prop('disabled', cart.length === 0);
+
+    calcChange();
+    calcCredit();
+}
+
+// ──────────────────────────────────────────────
+// CHANGE CALCULATOR
+// ──────────────────────────────────────────────
+function calcChange() {
+    var total = getTotal();
+    var recv  = parseFloat($('#cashRecv').val()) || 0;
+
+    if (recv > 0) {
+        var change = recv - total;
+        $('#changeAmt').text('৳ '
+            + Math.max(change, 0).toFixed(2));
+        $('#changeBox').show();
+        if (change < 0) {
+            $('#changeAmt').css('color', '#dc3545')
+                .text('Short: ৳ '
+                + Math.abs(change).toFixed(2));
+        } else {
+            $('#changeAmt').css('color', '#1a8a5a');
+        }
+    } else {
+        $('#changeBox').hide();
+    }
+}
+
+function calcCredit() {
+    var total = getTotal();
+    var paid  = parseFloat($('#creditPaid').val()) || 0;
+    var due   = Math.max(total - paid, 0);
+    $('#creditDue').text('৳ ' + due.toFixed(2));
+}
+
+function getTotal() {
+    return parseFloat($('#sTotal')
+        .text().replace('৳','').trim()) || 0;
+}
+
+// ──────────────────────────────────────────────
+// PAYMENT
+// ──────────────────────────────────────────────
+function selPay(method, btn) {
+    $('.pay-btn').removeClass('active');
+    $(btn).addClass('active');
+    $('#payMethodH').val(method);
+
+    // Change calc only for Cash
+    if (method === 'Cash') {
+        $('#changCalcWrap').show();
+    } else {
+        $('#changCalcWrap').hide();
+        $('#changeBox').hide();
+    }
+}
+
+function toggleCredit() {
+    var chk = document.getElementById('creditChk');
+    chk.checked = !chk.checked;
+    var on = chk.checked;
+
+    $('#creditCard').toggleClass('on', on);
+    $('#isCreditH').val(on ? 'true' : 'false');
+
+    if (on) {
+        $('#creditSec').slideDown(200);
+        $('#custDdl').css('border-color', '#ff9800')
+            .attr('required', true);
+    } else {
+        $('#creditSec').slideUp(200);
+        $('#custDdl').css('border-color', '')
+            .removeAttr('required');
+    }
+    calcCredit();
+}
+
+// ──────────────────────────────────────────────
+// SUBMIT
+// ──────────────────────────────────────────────
+function prepSale() {
+    if (!cart.length) {
+        toastr.error('Add at least one medicine!');
+        return false;
+    }
+
+    var isCredit = $('#isCreditH').val() === 'true';
+    if (isCredit && !$('#custDdl').val()) {
+        toastr.error('Select customer for credit sale!');
+        $('#custDdl').focus();
+        return false;
+    }
+
+    var paid = isCredit
+        ? (parseFloat($('#creditPaid').val()) || 0)
+        : getTotal();
+    $('#paidAmtH').val(paid);
+
+    var items = cart.map(function (i) {
+        return {
+            MedicineId:   i.id,
+            MedicineName: i.name,
+            GenericName:  i.gen,
+            Quantity:     i.qty,
+            SalePrice:    i.price,
+            ItemDiscount: i.disc,
+            SubTotal:     i.sub,
+            BatchId:      i.batchId,
+            BatchNumber:  i.batch,
+            ExpiryDate:   i.exp
+        };
+    });
+
+    $('#itemsJson').val(JSON.stringify(items));
+    return true;
+}
+
+// ──────────────────────────────────────────────
+// CAMERA
+// ──────────────────────────────────────────────
+function openCam() {
+    new bootstrap.Modal(
+        document.getElementById('camModal')).show();
+
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+    }).then(function (s) {
+        camStream = s;
+        var v = document.getElementById('camVideo');
+        v.srcObject = s;
+        v.play();
+
+        Quagga.init({
+            inputStream: {
+                type:   'LiveStream',
+                target: v,
+                constraints: { facingMode: 'environment' }
+            },
+            decoder: {
+                readers: ['ean_reader','ean_8_reader',
+                    'code_128_reader','upc_reader']
+            }
+        }, function (err) {
+            if (!err) Quagga.start();
+        });
+
+        Quagga.onDetected(function (res) {
+            if (scanCool) return;
+            scanCool = true;
+            beep();
+            closeCam();
+            var code = res.codeResult.code;
+            $('#medSearch').val(code);
+            search(code);
+            setTimeout(function () {
+                scanCool = false;
+            }, 2000);
+        });
+    }).catch(function () {
+        toastr.warning('Camera access denied!');
+    });
+}
+
+function closeCam() {
+    if (camStream) {
+        camStream.getTracks()
+            .forEach(function (t) { t.stop(); });
+        camStream = null;
+    }
+    try { Quagga.stop(); } catch (e) {}
+    var m = bootstrap.Modal.getInstance(
+        document.getElementById('camModal'));
+    if (m) m.hide();
+}
+
+document.getElementById('camModal')
+    .addEventListener('hidden.bs.modal', closeCam);
+
+// ──────────────────────────────────────────────
+// USB SCANNER
+// ──────────────────────────────────────────────
+var usBuf = '', usT = null;
+$(document).on('keypress', function (e) {
+    if (document.activeElement.id === 'medSearch')
+        return;
+    if ($(document.activeElement).is(
+        'input,textarea,select')) return;
+
+    clearTimeout(usT);
+    if (e.key === 'Enter' && usBuf.length > 3) {
+        $('#medSearch').val(usBuf);
+        search(usBuf);
+        usBuf = '';
+    } else {
+        usBuf += e.key;
+        usT = setTimeout(function () {
+            usBuf = '';
+        }, 200);
+    }
+});
+
+// ──────────────────────────────────────────────
+// BEEP
+// ──────────────────────────────────────────────
+function beep() {
+    try {
+        var c   = new (window.AudioContext
+            || window.webkitAudioContext)();
+        var o   = c.createOscillator();
+        var g   = c.createGain();
+        o.connect(g); g.connect(c.destination);
+        o.frequency.value = 1800;
+        o.type = 'square';
+        g.gain.value = 0.15;
+        o.start(); o.stop(c.currentTime + 0.08);
+    } catch (e) {}
+}
+
+window.addEventListener('beforeunload', closeCam);
+    </script>
+
+    <style>
+@@keyframes scanAnim {
+
+    0%   { top:0% }
+    50%  { top:calc(100% - 3px) }
+    100% { top:0% }
+}
+.pulse { animation:pulse 1.5s infinite }
+@@keyframes pulse {
+    0%,100% { opacity:1 }
+    50%     { opacity:0.3 }
+}
+    </style>
+}

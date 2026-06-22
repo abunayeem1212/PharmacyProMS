@@ -1,0 +1,298 @@
+﻿@model IEnumerable<PharmacyProMS.Models.UserActivityLog>
+@{
+    ViewBag.Title = "Activity Log";
+    int curPage = ViewBag.CurrentPage ?? 1;
+    int totPages = ViewBag.TotalPages ?? 1;
+    int totCount = ViewBag.TotalCount ?? 0;
+    int pageSize = 20;
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-history me-2"
+               style="color:#1a8a5a"></i>
+            Activity Log
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Activity Log
+            </li>
+        </ol>
+    </div>
+    <button class="btn btn-outline-danger"
+            onclick="clearOldLogs()">
+        <i class="fas fa-trash me-1"></i>
+        Clear Old (30+ days)
+    </button>
+</div>
+
+@* Filter *@
+<div class="card mb-3">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Index", "ActivityLog",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Search
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="searchTerm"
+                           value="@ViewBag.SearchTerm"
+                           class="form-control"
+                           placeholder="User, description..." />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Action
+                </label>
+                <select name="action" class="form-select">
+                    <option value="">All Actions</option>
+                    <option value="Create"
+                            @(ViewBag.Action == "Create" ? "selected" : "")>
+                        Create
+                    </option>
+                    <option value="Edit"
+                            @(ViewBag.Action == "Edit" ? "selected" : "")>
+                        Edit
+                    </option>
+                    <option value="Delete"
+                            @(ViewBag.Action == "Delete" ? "selected" : "")>
+                        Delete
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date From
+                </label>
+                <input type="date" name="dateFrom"
+                       class="form-control"
+                       value="@ViewBag.DateFrom" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date To
+                </label>
+                <input type="date" name="dateTo"
+                       class="form-control"
+                       value="@ViewBag.DateTo" />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit"
+                        class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            Log Records
+            <span class="badge ms-2"
+                  style="background:#e8f5ee;color:#1a8a5a">
+                @totCount Records
+            </span>
+        </span>
+        <small class="text-muted">
+            Page @curPage of @totPages
+        </small>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Description</th>
+                        <th>Table</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6"
+                                class="text-center py-4
+                                       text-muted">
+                                No logs found
+                            </td>
+                        </tr>
+                    }
+                    @{ int sl = (curPage - 1) * pageSize + 1; }
+                    @foreach (var log in Model)
+                    {
+                        string badgeClass =
+                            log.Action == "Create"
+                                ? "bg-success"
+                            : log.Action == "Edit"
+                                ? "bg-warning"
+                            : log.Action == "Delete"
+                                ? "bg-danger"
+                            : "bg-secondary";
+
+                        <tr>
+                            <td class="text-muted">@sl</td>
+                            <td>
+                                <div class="d-flex
+                                            align-items-center
+                                            gap-2">
+                                    <div style="width:32px;
+                                                height:32px;
+                                                background:#e8f5ee;
+                                                border-radius:50%;
+                                                display:flex;
+                                                align-items:center;
+                                                justify-content:center;
+                                                font-weight:700;
+                                                color:#1a8a5a;
+                                                font-size:12px">
+                                        @(log.UserName != null
+                                            ? log.UserName
+                                                .Substring(0,1)
+                                                .ToUpper()
+                                            : "U")
+                                    </div>
+                                    <small class="fw-semibold">
+                                        @log.UserName
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge @badgeClass">
+                                    @log.Action
+                                </span>
+                            </td>
+                            <td>
+                                <small>@log.Description</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-light
+                                             text-dark"
+                                      style="font-size:11px">
+                                    @log.TableAffected
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    @log.LoggedAt.ToString(
+                                        "dd MMM yyyy",
+                                        System.Globalization
+                                        .CultureInfo
+                                        .InvariantCulture)
+                                    <br />
+                                    @log.LoggedAt
+                                    .ToString("HH:mm:ss")
+                                </small>
+                            </td>
+                        </tr>
+                        sl++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* Pagination *@
+    @if (totPages > 1)
+    {
+        <div class="card-footer d-flex
+                    justify-content-between">
+            <small class="text-muted">
+                Showing @((curPage-1)*pageSize+1)
+                to @(Math.Min(curPage*pageSize, totCount))
+                of @totCount
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item
+                    @(curPage==1?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm = ViewBag.SearchTerm,
+                           action     = ViewBag.Action,
+                           dateFrom   = ViewBag.DateFrom,
+                           dateTo     = ViewBag.DateTo,
+                           page       = curPage-1 })">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= totPages; i++)
+                {
+                    <li class="page-item
+                        @(i==curPage?"active":"")">
+                        <a class="page-link"
+                           href="@Url.Action("Index", new {
+                               searchTerm = ViewBag.SearchTerm,
+                               action     = ViewBag.Action,
+                               dateFrom   = ViewBag.DateFrom,
+                               dateTo     = ViewBag.DateTo,
+                               page       = i })">@i</a>
+                        </li>
+                    }
+                <li class="page-item
+                    @(curPage==totPages?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm = ViewBag.SearchTerm,
+                           action     = ViewBag.Action,
+                           dateFrom   = ViewBag.DateFrom,
+                           dateTo     = ViewBag.DateTo,
+                           page       = curPage+1 })">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+    function clearOldLogs() {
+        if (!confirm('Clear all logs older than 30 days?'))
+            return;
+        $.ajax({
+            url: '@Url.Action("ClearOld","ActivityLog")',
+            type: 'POST',
+            data: {
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    toastr.success(res.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1500);
+                }
+            }
+        });
+    }
+    </script>
+    @Html.AntiForgeryToken()
+}

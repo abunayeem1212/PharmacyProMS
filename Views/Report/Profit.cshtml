@@ -1,0 +1,204 @@
+﻿@model IEnumerable<PharmacyProMS.ViewModels.ProfitReportViewModel>
+@{
+    ViewBag.Title = "Profit Report";
+}
+
+<div class="page-header d-print-none">
+    <div>
+        <h4>
+            <i class="fas fa-coins me-2"
+               style="color:#1a8a5a"></i>
+            Profit Report
+        </h4>
+    </div>
+    <button onclick="window.print()"
+            class="btn btn-outline-primary">
+        <i class="fas fa-print me-1"></i> Print
+    </button>
+
+
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("ExportStockExcel",
+        new { filter    = ViewBag.Filter,
+              companyId = ViewBag.CompanyId })"
+           class="btn btn-success">
+            <i class="fas fa-file-excel me-1"></i>
+            Export Excel
+        </a>
+        <button onclick="window.print()"
+                class="btn btn-outline-primary">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+    </div>
+</div>
+
+@* Filter *@
+<div class="card mb-3 d-print-none">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Profit", "Report",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Date From
+                </label>
+                <input type="date" name="dateFrom"
+                       class="form-control"
+                       value="@ViewBag.DateFrom" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Date To
+                </label>
+                <input type="date" name="dateTo"
+                       class="form-control"
+                       value="@ViewBag.DateTo" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn btn-primary w-100 mt-3">
+                    <i class="fas fa-filter me-1"></i>
+                    Generate
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@* Summary *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #2196f3">
+            <div style="font-size:20px;font-weight:700;
+                        color:#2196f3">
+                ৳ @String.Format("{0:N2}", (decimal)ViewBag.GrandSale)
+
+            </div>
+            <div class="text-muted small">Total Sale</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #dc3545">
+            <div style="font-size:20px;font-weight:700;
+                        color:#dc3545">
+                ৳ @String.Format("{0:N2}", (decimal)ViewBag.GrandCost)
+
+            </div>
+            <div class="text-muted small">Total Cost</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #4caf50">
+            <div style="font-size:24px;font-weight:700;
+                        color:#4caf50">
+                ৳ @String.Format("{0:N2}", (decimal)ViewBag.GrandProfit)
+
+            </div>
+            <div class="text-muted small fw-bold">
+                Net Profit
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-table me-2"></i>
+        Profit Report — @ViewBag.DateFrom to @ViewBag.DateTo
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th class="text-center">Total Qty</th>
+                    <th class="text-end">Sale Amount</th>
+                    <th class="text-end">Cost Amount</th>
+                    <th class="text-end">Profit</th>
+                    <th class="text-end">Margin %</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null)
+                {
+                    <tr>
+                        <td colspan="7"
+                            class="text-center py-4 text-muted">
+                            No data found
+                        </td>
+                    </tr>
+                }
+                @{ int i = 1; }
+                @foreach (var row in Model)
+                {
+                    decimal margin = row.TotalSale > 0
+                        ? Math.Round(
+                            row.TotalProfit / row.TotalSale * 100, 1)
+                        : 0;
+
+                    <tr>
+                        <td>@i</td>
+                        <td class="fw-semibold">@row.MedicineName</td>
+                        <td class="text-center">@row.TotalQty</td>
+                        <td class="text-end">
+                            ৳ @String.Format("{0:N2}", row.TotalSale)
+                        </td>
+                        <td class="text-end text-danger">
+                            ৳ @String.Format("{0:N2}", row.TotalCost)
+                        </td>
+                        <td class="text-end fw-bold text-success">
+                            ৳ @String.Format("{0:N2}", row.TotalProfit)
+                        </td>
+                        <td class="text-end">
+                            <span class="badge @(margin >= 20
+                                ? "bg-success"
+                                : margin >= 10
+                                    ? "bg-warning"
+                                    : "bg-danger")">
+                                @margin %
+                            </span>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+            <tfoot style="background:#f8f9fa;font-weight:700">
+                <tr>
+                    <td colspan="3" class="text-end">Total:</td>
+                    <td class="text-end">
+                        ৳ @String.Format("{0:N2}",
+                               (decimal)ViewBag.GrandSale)
+                    </td>
+                    <td class="text-end text-danger">
+                        ৳ @String.Format("{0:N2}",
+                               (decimal)ViewBag.GrandCost)
+                    </td>
+                    <td class="text-end text-success">
+                        ৳ @String.Format("{0:N2}",
+                               (decimal)ViewBag.GrandProfit)
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar, .d-print-none {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>

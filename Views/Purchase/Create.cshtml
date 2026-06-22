@@ -1,0 +1,444 @@
+﻿@model PharmacyProMS.ViewModels.PurchaseCreateViewModel
+@{
+    ViewBag.Title = "New Purchase Invoice";
+    string medicinesJson = "[]";
+    if (Model.Medicines != null)
+    {
+        medicinesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+            Model.Medicines.Select(m => new
+            {
+                m.MedicineId,
+                m.MedicineName,
+                m.GenericName,
+                m.UnitType
+            }).ToList()
+        );
+    }
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-plus-circle me-2"
+               style="color:#1a8a5a"></i>
+            New Purchase Invoice
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Purchase</a>
+            </li>
+            <li class="breadcrumb-item active">New Invoice</li>
+        </ol>
+    </div>
+</div>
+
+@using (Html.BeginForm("Create", "Purchase",
+    FormMethod.Post, new { id = "purchaseForm" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(false, "",
+        new { @class = "alert alert-danger" })
+
+    <input type="hidden" name="ItemsJson" id="itemsJson" />
+
+    <div class="row g-3">
+
+        @* MASTER SECTION *@
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-file-invoice me-2"></i>
+                    Invoice Information
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                Invoice Number
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.InvoiceNumber,
+                                new
+                                     {
+                                    @class = "form-control",
+                                    @readonly = "readonly",
+                                    style = "background:#f8f9fa"
+                                })
+                            @Html.ValidationMessageFor(
+                                m => m.InvoiceNumber, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                Purchase Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.PurchaseDate,
+                                new
+                                     {
+                                    @class = "form-control",
+                                    type = "date",
+                                    Value = DateTime.Today
+                                                .ToString("yyyy-MM-dd")
+                                })
+                            @Html.ValidationMessageFor(
+                                m => m.PurchaseDate, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Supplier
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.DropDownListFor(m => m.SupplierId,
+                                new SelectList(Model.Suppliers,
+                                    "SupplierId", "SupplierName"),
+                                "-- Select Supplier --",
+                                new { @class = "form-select" })
+                            @Html.ValidationMessageFor(
+                                m => m.SupplierId, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* DETAILS SECTION *@
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex
+                            justify-content-between
+                            align-items-center">
+                    <span>
+                        <i class="fas fa-pills me-2"></i>
+                        Medicine Items
+                    </span>
+                    <button type="button"
+                            class="btn btn-sm btn-success"
+                            onclick="addItemRow()">
+                        <i class="fas fa-plus me-1"></i>
+                        Add Medicine
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:220px">
+                                        Medicine
+                                    </th>
+                                    <th style="width:120px">
+                                        Batch No
+                                    </th>
+                                    <th style="width:130px">
+                                        Expiry Date
+                                    </th>
+                                    <th style="width:130px">
+                                        Mfg Date
+                                    </th>
+                                    <th style="width:90px">
+                                        Qty
+                                    </th>
+                                    <th style="width:110px">
+                                        Price (৳)
+                                    </th>
+                                    <th style="width:110px">
+                                        Subtotal
+                                    </th>
+                                    <th style="width:50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyState"
+                         class="text-center py-4 text-muted">
+                        <i class="fas fa-plus-circle"
+                           style="font-size:30px;color:#ddd"></i>
+                        <p class="mt-2 mb-0">
+                            Click "Add Medicine" to add items
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* TOTALS SECTION *@
+        <div class="col-md-7"></div>
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="fw-semibold">Sub Total:</td>
+                            <td class="text-end fw-semibold"
+                                id="lblSubTotal">
+                                ৳ 0.00
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">
+                                Discount (৳):
+                            </td>
+                            <td class="text-end">
+                                <input type="number"
+                                       name="Discount"
+                                       id="discountInput"
+                                       class="form-control
+                                              form-control-sm
+                                              text-end"
+                                       value="0"
+                                       min="0"
+                                       step="0.01"
+                                       onchange="calcTotal()" />
+                            </td>
+                        </tr>
+                        <tr style="border-top:2px solid #1a8a5a">
+                            <td class="fw-bold"
+                                style="color:#1a8a5a">
+                                Net Amount:
+                            </td>
+                            <td class="text-end fw-bold"
+                                id="lblNetAmount"
+                                style="color:#1a8a5a;font-size:18px">
+                                ৳ 0.00
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">
+                                Paid Amount:
+                            </td>
+                            <td class="text-end">
+                                <input type="number"
+                                       name="PaidAmount"
+                                       id="paidInput"
+                                       class="form-control
+                                              form-control-sm
+                                              text-end"
+                                       value="0"
+                                       min="0"
+                                       step="0.01" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="button"
+                        class="btn btn-primary w-100"
+                        onclick="submitPurchase()">
+                    <i class="fas fa-save me-2"></i>
+                    Save Invoice
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </a>
+            </div>
+        </div>
+
+    </div>
+}
+
+@section Scripts {
+    <script>
+
+    // Server থেকে Medicine data
+    var medicines = @Html.Raw(medicinesJson);
+    var rowIndex  = 0;
+    var items     = [];
+
+    // ── Add New Row ──────────────────────────────────────
+    function addItemRow() {
+        rowIndex++;
+        $('#emptyState').hide();
+
+        var medOptions = '<option value="">-- Select --</option>';
+        medicines.forEach(function (m) {
+            medOptions += '<option value="' + m.MedicineId + '">'
+                + m.MedicineName
+                + (m.GenericName
+                    ? ' (' + m.GenericName + ')' : '')
+                + '</option>';
+        });
+
+        var html =
+            '<tr id="item-row-' + rowIndex + '">' +
+            '<td>' +
+                '<select class="form-select form-select-sm" ' +
+                    'id="med-' + rowIndex + '" ' +
+                    'onchange="calcRow(' + rowIndex + ')">' +
+                    medOptions +
+                '</select>' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" ' +
+                    'class="form-control form-control-sm" ' +
+                    'id="batch-' + rowIndex + '" ' +
+                    'placeholder="Batch No" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="date" ' +
+                    'class="form-control form-control-sm" ' +
+                    'id="expiry-' + rowIndex + '" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="date" ' +
+                    'class="form-control form-control-sm" ' +
+                    'id="mfg-' + rowIndex + '" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="number" min="1" value="1" ' +
+                    'class="form-control form-control-sm text-center" ' +
+                    'id="qty-' + rowIndex + '" ' +
+                    'onchange="calcRow(' + rowIndex + ')" ' +
+                    'oninput="calcRow(' + rowIndex + ')" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="number" min="0" step="0.01" value="0" ' +
+                    'class="form-control form-control-sm text-end" ' +
+                    'id="price-' + rowIndex + '" ' +
+                    'onchange="calcRow(' + rowIndex + ')" ' +
+                    'oninput="calcRow(' + rowIndex + ')" />' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" readonly ' +
+                    'class="form-control form-control-sm text-end ' +
+                    'fw-semibold" ' +
+                    'style="background:#f8f9fa" ' +
+                    'id="sub-' + rowIndex + '" ' +
+                    'value="0.00" />' +
+            '</td>' +
+            '<td>' +
+                '<button type="button" ' +
+                    'class="btn btn-sm btn-outline-danger" ' +
+                    'onclick="removeRow(' + rowIndex + ')">' +
+                    '<i class="fas fa-times"></i>' +
+                '</button>' +
+            '</td>' +
+            '</tr>';
+
+        $('#itemsBody').append(html);
+    }
+
+    // ── Calculate Row Subtotal ────────────────────────────
+    function calcRow(idx) {
+        var qty   = parseFloat($('#qty-'   + idx).val()) || 0;
+        var price = parseFloat($('#price-' + idx).val()) || 0;
+        var sub   = qty * price;
+        $('#sub-' + idx).val(sub.toFixed(2));
+        calcTotal();
+    }
+
+    // ── Calculate Grand Total ─────────────────────────────
+    function calcTotal() {
+        var subTotal = 0;
+        $('#itemsBody tr').each(function () {
+            var idx = $(this).attr('id').replace('item-row-', '');
+            subTotal += parseFloat($('#sub-' + idx).val()) || 0;
+        });
+
+        var discount = parseFloat(
+            $('#discountInput').val()) || 0;
+        var net = subTotal - discount;
+        if (net < 0) net = 0;
+
+        $('#lblSubTotal').text('৳ ' + subTotal.toFixed(2));
+        $('#lblNetAmount').text('৳ ' + net.toFixed(2));
+    }
+
+    // ── Remove Row ────────────────────────────────────────
+    function removeRow(idx) {
+        $('#item-row-' + idx).remove();
+        calcTotal();
+        if ($('#itemsBody tr').length === 0)
+            $('#emptyState').show();
+    }
+
+    // ── Submit Purchase ───────────────────────────────────
+    function submitPurchase() {
+
+        var rows = $('#itemsBody tr');
+        if (rows.length === 0) {
+            toastr.error(
+                'Please add at least one medicine!');
+            return;
+        }
+
+        items = [];
+        var valid = true;
+
+        rows.each(function () {
+            if (!valid) return false;
+
+            var idx     = $(this).attr('id')
+                            .replace('item-row-', '');
+            var medSel  = $('#med-'    + idx);
+            var medId   = parseInt(medSel.val());
+            var medName = medSel.find('option:selected').text();
+            var batch   = $('#batch-'  + idx).val().trim();
+            var expiry  = $('#expiry-' + idx).val();
+            var mfg     = $('#mfg-'    + idx).val();
+            var qty     = parseInt($('#qty-'     + idx).val());
+            var price   = parseFloat(
+                            $('#price-' + idx).val());
+            var sub     = parseFloat(
+                            $('#sub-'   + idx).val());
+
+            if (!medId) {
+                toastr.error(
+                    'Please select medicine for all rows!');
+                valid = false; return false;
+            }
+            if (!batch) {
+                toastr.error(
+                    'Batch number is required!');
+                valid = false; return false;
+            }
+            if (!expiry) {
+                toastr.error(
+                    'Expiry date is required!');
+                valid = false; return false;
+            }
+            if (!qty || qty <= 0) {
+                toastr.error(
+                    'Quantity must be greater than 0!');
+                valid = false; return false;
+            }
+            if (!price || price <= 0) {
+                toastr.error(
+                    'Price must be greater than 0!');
+                valid = false; return false;
+            }
+
+            items.push({
+                MedicineId:      medId,
+                MedicineName:    medName,
+                BatchNumber:     batch,
+                ExpiryDate:      expiry,
+                ManufactureDate: mfg || null,
+                Quantity:        qty,
+                PurchasePrice:   price,
+                SubTotal:        sub
+            });
+        });
+
+        if (!valid) return;
+
+        $('#itemsJson').val(JSON.stringify(items));
+        $('#purchaseForm').submit();
+    }
+
+    </script>
+}

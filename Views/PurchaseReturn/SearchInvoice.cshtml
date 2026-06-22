@@ -1,0 +1,187 @@
+﻿@{
+    ViewBag.Title = "Purchase Return — Search Invoice";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-undo-alt me-2"
+               style="color:#ff5722"></i>
+            Purchase Return
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">
+                    Purchase Returns
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Search Invoice
+            </li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Index")"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-list me-1"></i> Return List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-search me-2"></i>
+                Search Purchase Invoice
+            </div>
+            <div class="card-body p-4">
+
+                <div class="mb-4 text-center">
+                    <div style="width:80px;height:80px;
+                                background:#fbe9e7;
+                                border-radius:50%;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                margin:0 auto 15px">
+                        <i class="fas fa-undo-alt"
+                           style="color:#ff5722;
+                                  font-size:30px"></i>
+                    </div>
+                    <p class="text-muted">
+                        Purchase Invoice Number দিয়ে
+                        invoice খুঁজুন
+                    </p>
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-file-invoice
+                                   text-muted"></i>
+                    </span>
+                    <input type="text"
+                           id="invoiceSearchInput"
+                           class="form-control form-control-lg"
+                           placeholder="e.g. PUR-202603-0001"
+                           autofocus />
+                    <button class="btn btn-warning"
+                            onclick="searchInvoice()">
+                        <i class="fas fa-search me-1"></i>
+                        Search
+                    </button>
+                </div>
+
+                <div id="invoiceResult" style="display:none">
+                    <div class="card border"
+                         style="border-color:#ff5722
+                                !important">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        Invoice No
+                                    </small>
+                                    <div class="fw-bold"
+                                         style="color:#ff5722"
+                                         id="resInvoiceNo">
+                                    </div>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small class="text-muted">
+                                        Purchase Date
+                                    </small>
+                                    <div id="resPurDate"></div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <small class="text-muted">
+                                        Supplier
+                                    </small>
+                                    <div id="resSupplier"></div>
+                                </div>
+                                <div class="col-6 mt-2 text-end">
+                                    <small class="text-muted">
+                                        Total Amount
+                                    </small>
+                                    <div class="fw-bold
+                                                text-success"
+                                         id="resAmount">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a id="proceedBtn"
+                                   href="#"
+                                   class="btn btn-warning w-100">
+                                    <i class="fas fa-undo-alt
+                                               me-2"></i>
+                                    Process Return
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="invoiceNotFound"
+                     class="alert alert-danger"
+                     style="display:none">
+                    <i class="fas fa-exclamation-circle
+                               me-2"></i>
+                    Invoice not found!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    $('#invoiceSearchInput').keypress(function (e) {
+        if (e.which === 13) searchInvoice();
+    });
+
+    function searchInvoice() {
+        var num = $('#invoiceSearchInput').val().trim();
+        if (!num) {
+            toastr.warning('Please enter invoice number!');
+            return;
+        }
+
+        $.get('@Url.Action("GetInvoice",
+            "PurchaseReturn")',
+            { invoiceNo: num },
+            function (res) {
+                $('#invoiceResult').hide();
+                $('#invoiceNotFound').hide();
+
+                if (res.success) {
+                    var d = res.data;
+                    var date = new Date(parseInt(
+                        d.PurchaseDate.replace(
+                            /\/Date\((\d+)\)\//, '$1')));
+                    var dateStr = date.getDate() + ' '
+                        + date.toLocaleString('en',
+                            {month:'short'})
+                        + ' ' + date.getFullYear();
+
+                    $('#resInvoiceNo').text(d.InvoiceNumber);
+                    $('#resPurDate').text(dateStr);
+                    $('#resSupplier').text(d.SupplierName);
+                    $('#resAmount').text('৳ '
+                        + parseFloat(d.NetAmount)
+                            .toFixed(2));
+                    $('#proceedBtn').attr('href',
+                        '@Url.Action("Create",
+                        "PurchaseReturn")?purchaseId='
+                        + d.PurchaseId);
+                    $('#invoiceResult').show();
+                } else {
+                    $('#invoiceNotFound').show();
+                }
+            });
+    }
+    </script>
+}

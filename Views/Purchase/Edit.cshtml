@@ -1,0 +1,98 @@
+﻿@model PharmacyProMS.Models.PurchaseInvoice
+@{
+    ViewBag.Title = "Edit Purchase — "
+        + Model.InvoiceNumber;
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-edit me-2"
+               style="color:#1a8a5a"></i>
+            Edit Purchase — @Model.InvoiceNumber
+        </h4>
+    </div>
+    <a href="@Url.Action("Details",
+        new{id=Model.PurchaseId})"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="alert alert-warning mb-3">
+    <i class="fas fa-info-circle me-2"></i>
+    Limited edit — Medicine items change করা যাবে না।
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header fw-bold">
+                <i class="fas fa-edit me-2"></i>
+                Edit Details
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Edit", "Purchase",
+                    new { id = Model.PurchaseId },
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Purchase Date
+                            </label>
+                            <input type="date"
+                                   name="purchaseDate"
+                                   class="form-control"
+                                   value="@Model.PurchaseDate
+                                       .ToString(" yyyy-MM-dd")" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Discount (৳)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    ৳
+                                </span>
+                                <input type="number"
+                                       name="discount"
+                                       class="form-control"
+                                       min="0" step="0.01"
+                                       value="@Model.Discount" />
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Note
+                            </label>
+                            <textarea name="note"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Purchase note...">@Model.Note</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Save Changes
+                        </button>
+                        <a href="@Url.Action("Details",
+                            new{id=Model.PurchaseId})"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

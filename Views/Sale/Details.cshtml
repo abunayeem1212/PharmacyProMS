@@ -1,0 +1,570 @@
+﻿
+@model PharmacyProMS.Models.SaleInvoice
+@{
+    ViewBag.Title = "Invoice - " + Model.InvoiceNumber;
+    var setting = ViewBag.Setting as
+        PharmacyProMS.Models.PharmacySetting;
+}
+
+<div class="page-header d-print-none">
+    <div>
+        <h4>
+            <i class="fas fa-file-invoice me-2"
+               style="color:#1a8a5a"></i>
+            Sale Invoice
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Sales</a>
+            </li>
+            <li class="breadcrumb-item active">
+                @Model.InvoiceNumber
+            </li>
+        </ol>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()"
+                class="btn btn-outline-primary">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+        <a href="@Url.Action("Create")"
+           class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> New Sale
+        </a>
+        <a href="@Url.Action("Index")"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+
+
+        @* Edit button *@
+        @if (Model.InvoiceStatus != "Cancelled")
+        {
+            <a href="@Url.Action("Edit",
+        new{id=Model.InvoiceId})"
+               class="btn btn-outline-warning">
+                <i class="fas fa-edit me-1"></i>
+                Edit
+            </a>
+        }
+
+        @* Payment History button *@
+        <a href="@Url.Action("PaymentHistory",
+    new{id=Model.InvoiceId})"
+           class="btn btn-outline-info">
+            <i class="fas fa-history me-1"></i>
+            Payments
+        </a>
+
+        @if (Model.DueAmount > 0 && Model.CustomerId.HasValue &&
+     Model.InvoiceStatus != "Cancelled")
+        {
+            <button type="button"
+                    class="btn btn-success"
+                    onclick="showAddPayment()">
+                <i class="fas fa-money-bill-wave me-1"></i>
+                Add Payment
+
+            </button>
+        }
+
+        @* Cancel button (Admin only) *@
+        @if (User.IsInRole("Admin") &&
+             Model.InvoiceStatus != "Cancelled")
+        {
+            <a href="@Url.Action("Cancel",
+        new{id=Model.InvoiceId})"
+               class="btn btn-outline-danger">
+                <i class="fas fa-ban me-1"></i>
+                Cancel
+            </a>
+        }
+    </div>
+</div>
+
+<div class="card" id="printArea">
+    <div class="card-body p-5">
+
+        @* Header *@
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h3 style="color:#1a8a5a;font-weight:700">
+                    💊 @(setting != null
+                        ? setting.PharmacyName
+                        : "PharmacyPro MS")
+                </h3>
+                @if (setting != null)
+                {
+                    <p class="text-muted mb-0 small">
+                        @setting.Address
+                    </p>
+                    <p class="text-muted mb-0 small">
+                        @setting.Phone
+                    </p>
+                }
+            </div>
+            <div class="col-md-6 text-end">
+                <h4 class="fw-bold mb-1">
+                    SALE INVOICE
+                </h4>
+                <h5 style="color:#1a8a5a">
+                    @Model.InvoiceNumber
+                </h5>
+                <p class="text-muted mb-0">
+                    Date:
+                    @Model.SaleDate.ToString("dd MMMM yyyy")
+                </p>
+            </div>
+
+
+            @* Due Alert — Credit Sale হলে দেখাবে *@
+            @if (Model.IsCreditSale)
+            {
+                decimal saleDue = Model.NetAmount - Model.PaidAmount;
+                <div class="alert @(saleDue > 0
+        ? "alert-warning" : "alert-success")
+        d-print-none mb-3">
+
+                    @if (saleDue > 0)
+                    {
+                        <i class="fas fa-exclamation-triangle
+                       me-2"></i>
+                        <strong>Credit Sale — Due Amount:</strong>
+                        <span class="fw-bold text-danger ms-2">
+                            ৳ @String.Format("{0:N2}", saleDue)
+                        </span>
+                        if (Model.CustomerId.HasValue)
+                        {
+                            <a href="@Url.Action("CollectPayment",
+                    "CustomerLedger",
+                    new{customerId=Model.CustomerId})"
+                               class="btn btn-sm btn-warning ms-3">
+                                <i class="fas fa-money-bill-wave
+                               me-1"></i>
+                                Collect Payment
+                            </a>
+
+
+                            //////
+                            <a href="@Url.Action("ThermalPrint",
+    new{id=Model.InvoiceId})"
+                               target="_blank"
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-receipt me-1"></i>
+                                Thermal
+                            </a>
+
+                            //////
+
+
+
+                        }
+                    }
+                    else
+                    {
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Credit Sale — Fully Paid ✅</strong>
+                    }
+                </div>
+            }
+        </div>
+
+
+
+        <hr style="border-color:#1a8a5a" />
+
+        @* Customer Info *@
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6 class="fw-bold text-muted mb-2">
+                    BILL TO
+                </h6>
+                @if (Model.Customer != null)
+                {
+                    <p class="mb-1 fw-semibold">
+                        @Model.Customer.CustomerName
+                    </p>
+                    <p class="mb-1 text-muted">
+                        @Model.Customer.Phone
+                    </p>
+                    <p class="mb-0 text-muted">
+                        @Model.Customer.Address
+                    </p>
+                }
+                else
+                {
+                    <p class="mb-0 fw-semibold">
+                        @(Model.WalkInCustomerName
+                            ?? "Walk-in Customer")
+                    </p>
+                }
+            </div>
+            <div class="col-md-6 text-end">
+                <h6 class="fw-bold text-muted mb-2">
+                    SERVED BY
+                </h6>
+                <p class="mb-1">@Model.CreatedBy</p>
+                <p class="mb-0 text-muted small">
+                    @Model.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                </p>
+            </div>
+        </div>
+
+        @* Items *@
+        <table class="table table-bordered mb-4">
+            <thead style="background:#e8f5ee">
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Sub Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int i = 1; }
+                @foreach (var item in Model.SaleItems ??
+                    new List<PharmacyProMS
+                        .Models.SaleInvoiceItem>())
+                {
+                    <tr>
+                        <td>@i</td>
+                        <td>
+                            <div class="fw-semibold">
+                                @(item.Medicine != null
+                                    ? item.Medicine.MedicineName
+                                    : "—")
+                            </div>
+                            <small class="text-muted">
+                                @(item.Medicine != null
+                                    ? item.Medicine.GenericName
+                                    : "")
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            @item.Quantity
+                        </td>
+                        <td class="text-end">
+                            ৳ @item.SalePrice.ToString("N2")
+                        </td>
+                        <td class="text-end fw-semibold">
+                            ৳ @item.SubTotal.ToString("N2")
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-end fw-semibold">
+                        Sub Total:
+                    </td>
+                    <td class="text-end fw-semibold">
+                        ৳ @Model.TotalAmount.ToString("N2")
+                    </td>
+                </tr>
+                @if (Model.Discount > 0)
+                {
+                    <tr>
+                        <td colspan="4"
+                            class="text-end text-muted">
+                            Discount:
+                        </td>
+                        <td class="text-end text-danger">
+                            - ৳ @Model.Discount.ToString("N2")
+                        </td>
+                    </tr>
+                }
+                @if (Model.VatAmount > 0)
+                {
+                    <tr>
+                        <td colspan="4"
+                            class="text-end text-muted">
+                            VAT:
+                        </td>
+                        <td class="text-end text-warning">
+                            + ৳ @Model.VatAmount.ToString("N2")
+                        </td>
+                    </tr>
+                }
+
+                <tr style="background:#e8f5ee">
+                    <td colspan="4" class="text-end fw-bold"
+                        style="color:#1a8a5a">
+                        NET AMOUNT:
+                    </td>
+                    <td class="text-end fw-bold"
+                        style="color:#1a8a5a;font-size:20px">
+                        ৳ @Model.NetAmount.ToString("N2")
+                    </td>
+                </tr>
+
+                @* tfoot এর শেষে add করো *@
+                @if (Model.IsCreditSale)
+                {
+                    <tr>
+                        <td colspan="4"
+                            class="text-end fw-semibold text-success">
+                            Paid:
+                        </td>
+                        <td class="text-end fw-semibold text-success">
+                            ৳ @String.Format("{0:N2}", Model.PaidAmount)
+                        </td>
+                    </tr>
+                    if (Model.DueAmount > 0)
+                    {
+                        <tr style="background:#fff3e0">
+                            <td colspan="4"
+                                class="text-end fw-bold text-danger">
+                                Due Amount:
+                            </td>
+                            <td class="text-end fw-bold text-danger"
+                                style="font-size:16px">
+                                ৳ @String.Format("{0:N2}", Model.DueAmount)
+                            </td>
+                        </tr>
+                    }
+                }
+
+
+
+
+            </tfoot>
+        </table>
+
+        @* Footer *@
+        <div class="row mt-5">
+            <div class="col-md-6 text-center">
+                <div style="border-top:1px solid #333;
+                            padding-top:5px;margin-top:50px;
+                            display:inline-block;
+                            min-width:200px">
+                    Customer Signature
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <div style="border-top:1px solid #333;
+                            padding-top:5px;margin-top:50px;
+                            display:inline-block;
+                            min-width:200px">
+                    Authorized Signature
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 text-muted small">
+            <p class="mb-0">
+                Thank you for your purchase! 💊
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar,
+        .page-header, .d-print-none {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+    }
+</style>
+
+<!-- card end -->
+<!-- page wrapper end (if any) -->
+@* ── Add Payment Modal ── *@
+@if (Model.DueAmount > 0 && Model.CustomerId.HasValue &&
+     Model.InvoiceStatus != "Cancelled")
+{
+    var due = Model.DueAmount;
+
+    <div id="addPayModal"
+         style="display:none;
+                position:fixed;top:0;left:0;
+                width:100%;height:100%;
+                background:rgba(0,0,0,0.5);
+                z-index:9999;
+                align-items:center;
+                justify-content:center">
+
+        <div style="background:white;
+                    border-radius:16px;
+                    padding:30px;
+                    width:400px;
+                    max-width:90vw;
+                    box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+
+            <h5 class="fw-bold mb-3">
+                <i class="fas fa-money-bill-wave me-2 text-success"></i>
+                Add Payment
+            </h5>
+
+            <div class="mb-3 p-3 rounded text-center"
+                 style="background:#fff3f3;
+                        border:1px solid #ffcdd2">
+                <div class="text-muted small">Due Amount</div>
+                <div class="fw-bold text-danger"
+                     style="font-size:24px">
+                    ৳ @String.Format("{0:N2}", due)
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Payment Amount
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">৳</span>
+                    <input type="number"
+                           id="addPayAmt"
+                           class="form-control form-control-lg"
+                           min="0.01"
+                           step="0.01"
+                           max="@due"
+                           placeholder="0.00" />
+                </div>
+
+                <button type="button"
+                        class="btn btn-sm btn-outline-success mt-1"
+                        onclick="payFullNow()">
+                    Pay Full Due (৳ @String.Format("{0:N2}", due))
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Payment Method
+                </label>
+                <select id="addPayMethod" class="form-select">
+                    <option value="Cash">💵 Cash</option>
+                    <option value="bKash">📱 bKash</option>
+                    <option value="Nagad">📱 Nagad</option>
+                    <option value="Card">💳 Card</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    Note (Optional)
+                </label>
+                <input type="text"
+                       id="addPayNote"
+                       class="form-control"
+                       placeholder="Payment note..." />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button"
+                        class="btn btn-success w-100"
+                        onclick="submitPayment()">
+                    <i class="fas fa-check me-2"></i>
+                    Confirm Payment
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        onclick="hideAddPayment()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@section Scripts {
+    <script>
+    var invId   = @Model.InvoiceId;
+    var invDue  = @(Model.NetAmount - Model.PaidAmount);
+
+    // ── Add Payment Modal Show ─────────────────────
+    function showAddPayment() {
+        if (invDue <= 0) {
+            toastr.info('Invoice is fully paid!');
+            return;
+        }
+        document.getElementById(
+            'addPayModal').style.display = 'flex';
+    }
+
+    function hideAddPayment() {
+        document.getElementById(
+            'addPayModal').style.display = 'none';
+    }
+
+    function payFullNow() {
+        document.getElementById('addPayAmt').value
+            = invDue.toFixed(2);
+    }
+
+    // ── Submit Payment ────────────────────────────
+    function submitPayment() {
+        var amt = parseFloat(
+            document.getElementById('addPayAmt').value)
+            || 0;
+        var method = document.getElementById(
+            'addPayMethod').value;
+        var note = document.getElementById(
+            'addPayNote').value;
+
+        if (amt <= 0) {
+            toastr.error('Enter valid amount!');
+            return;
+        }
+        if (amt > invDue) {
+            toastr.error('Amount exceeds due: ৳'
+                + invDue.toFixed(2));
+            return;
+        }
+
+        showSpinner('Processing payment...');
+
+        $.ajax({
+            url:  '@Url.Action("AddPayment","Sale")',
+            type: 'POST',
+            data: {
+                invoiceId:     invId,
+                paymentAmount: amt,
+                paymentMethod: method,
+                note:          note,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .first().val()
+            },
+            success: function (res) {
+                hideSpinner();
+                if (res.success) {
+                    toastr.success(res.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1200);
+                } else {
+                    toastr.error(res.message
+                        || 'Payment failed!');
+                }
+            },
+            error: function (xhr) {
+                hideSpinner();
+                toastr.error('Error: '
+                    + xhr.status);
+            }
+        });
+    }
+    </script>
+    @Html.AntiForgeryToken()
+}

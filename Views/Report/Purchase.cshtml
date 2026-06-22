@@ -1,0 +1,271 @@
+﻿@model IEnumerable<PharmacyProMS.Models.PurchaseInvoice>
+@{
+    ViewBag.Title = "Purchase Report";
+}
+
+<div class="page-header d-print-none">
+    <div>
+        <h4>
+            <i class="fas fa-shopping-cart me-2"
+               style="color:#1a8a5a"></i>
+            Purchase Report
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Purchase Report
+            </li>
+        </ol>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("ExportPurchaseExcel",
+            new { dateFrom       = ViewBag.DateFrom,
+                  dateTo         = ViewBag.DateTo,
+                  filterSupplier = ViewBag.FilterSupplier })"
+           class="btn btn-success">
+            <i class="fas fa-file-excel me-1"></i>
+            Export Excel
+        </a>
+        <button onclick="window.print()"
+                class="btn btn-outline-primary">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+    </div>
+</div>
+
+@* Filter *@
+<div class="card mb-3 d-print-none">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Purchase", "Report",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date From
+                </label>
+                <input type="date" name="dateFrom"
+                       class="form-control"
+                       value="@ViewBag.DateFrom" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date To
+                </label>
+                <input type="date" name="dateTo"
+                       class="form-control"
+                       value="@ViewBag.DateTo" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Supplier
+                </label>
+                <select name="filterSupplier"
+                        class="form-select">
+                    <option value="">All Suppliers</option>
+                    @foreach (var s in
+                        (IEnumerable<PharmacyProMS
+                            .Models.Supplier>)
+                        ViewBag.Suppliers)
+                    {
+                        <option value="@s.SupplierId"
+                                @(ViewBag.FilterSupplier != null && (int)ViewBag.FilterSupplier == s.SupplierId ? "selected" : "")>
+                            @s.SupplierName
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit"
+                        class="btn btn-primary w-100 mt-3">
+                    <i class="fas fa-filter me-1"></i>
+                    Generate
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@* Summary *@
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #1a8a5a">
+            <div style="font-size:22px;font-weight:700;
+                        color:#1a8a5a">
+                @ViewBag.InvoiceCount
+            </div>
+            <div class="text-muted small">
+                Total Invoices
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #2196f3">
+            <div style="font-size:20px;font-weight:700;
+                        color:#2196f3">
+                ৳ @String.Format("{0:N2}",
+                  (decimal)ViewBag.TotalPurchase)
+            </div>
+            <div class="text-muted small">Total Purchase</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #4caf50">
+            <div style="font-size:20px;font-weight:700;
+                        color:#4caf50">
+                ৳ @String.Format("{0:N2}",
+                  (decimal)ViewBag.TotalPaid)
+            </div>
+            <div class="text-muted small">Total Paid</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3"
+             style="border-top:3px solid #dc3545">
+            <div style="font-size:20px;font-weight:700;
+                        color:#dc3545">
+                ৳ @String.Format("{0:N2}",
+                  (decimal)ViewBag.TotalDue)
+            </div>
+            <div class="text-muted small">Total Due</div>
+        </div>
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-table me-2"></i>
+        Purchase Report —
+        @ViewBag.DateFrom to @ViewBag.DateTo
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice No</th>
+                    <th>Date</th>
+                    <th>Supplier</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Discount</th>
+                    <th>Net Amount</th>
+                    <th>Paid</th>
+                    <th>Due</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="10"
+                            class="text-center py-4 text-muted">
+                            No data found
+                        </td>
+                    </tr>
+                }
+                @{ int i = 1; }
+                @foreach (var inv in Model)
+                {
+                    decimal due = inv.NetAmount
+                                  - inv.PaidAmount;
+                    <tr>
+                        <td>@i</td>
+                        <td class="fw-semibold"
+                            style="color:#1a8a5a">
+                            @inv.InvoiceNumber
+                        </td>
+                        <td>
+                            @inv.PurchaseDate.ToString(
+                                "dd MMM yyyy",
+                                System.Globalization
+                                .CultureInfo.InvariantCulture)
+                        </td>
+                        <td>
+                            @(inv.Supplier != null
+                                ? inv.Supplier.SupplierName
+                                : "—")
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                @(inv.PurchaseItems?.Count ?? 0)
+                            </span>
+                        </td>
+                        <td>
+                            ৳ @String.Format("{0:N2}",
+                              inv.TotalAmount)
+                        </td>
+                        <td class="text-danger">
+                            ৳ @String.Format("{0:N2}",
+                              inv.Discount)
+                        </td>
+                        <td class="fw-bold"
+                            style="color:#1a8a5a">
+                            ৳ @String.Format("{0:N2}",
+                              inv.NetAmount)
+                        </td>
+                        <td class="text-success">
+                            ৳ @String.Format("{0:N2}",
+                              inv.PaidAmount)
+                        </td>
+                        <td class="@(due > 0
+                            ? "text-danger fw-semibold" : "")">
+                            ৳ @String.Format("{0:N2}", due)
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+            <tfoot style="background:#f8f9fa;
+                          font-weight:700">
+                <tr>
+                    <td colspan="5" class="text-end">
+                        Total:
+                    </td>
+                    <td>
+                        ৳ @String.Format("{0:N2}",
+                          Model.Sum(p => p.TotalAmount))
+                    </td>
+                    <td class="text-danger">
+                        ৳ @String.Format("{0:N2}",
+                          Model.Sum(p => p.Discount))
+                    </td>
+                    <td style="color:#1a8a5a">
+                        ৳ @String.Format("{0:N2}",
+                          Model.Sum(p => p.NetAmount))
+                    </td>
+                    <td class="text-success">
+                        ৳ @String.Format("{0:N2}",
+                          Model.Sum(p => p.PaidAmount))
+                    </td>
+                    <td class="text-danger">
+                        ৳ @String.Format("{0:N2}",
+                          Model.Sum(p => p.NetAmount
+                              - p.PaidAmount))
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar, .d-print-none {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>

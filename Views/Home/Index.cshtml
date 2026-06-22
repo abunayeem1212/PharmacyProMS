@@ -1,0 +1,1199 @@
+﻿@{
+    ViewBag.Title = "Home";
+    Layout = null;
+    string pharmName = ViewBag.PharmacyName ?? "PharmacyPro MS";
+    string logoPath = ViewBag.LogoPath;
+    string address = ViewBag.Address ?? "";
+    string phone = ViewBag.Phone ?? "";
+    string today = ViewBag.Today ?? "";
+
+    decimal todaySale = ViewBag.TodaySale ?? 0;
+    int todaySaleCount = ViewBag.TodaySaleCount ?? 0;
+    decimal todayPurchase = ViewBag.TodayPurchase ?? 0;
+    int totalMedicines = ViewBag.TotalMedicines ?? 0;
+    int lowStock = ViewBag.LowStock ?? 0;
+    int outOfStock = ViewBag.OutOfStock ?? 0;
+    int totalCustomers = ViewBag.TotalCustomers ?? 0;
+    decimal monthSale = ViewBag.MonthSale ?? 0;
+
+    var recentSales = ViewBag.RecentSales as
+        IEnumerable<PharmacyProMS.Models.SaleInvoice>
+        ?? new List<PharmacyProMS.Models.SaleInvoice>();
+
+    bool isAdmin = User.IsInRole("Admin");
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <title>@pharmName</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            background: #0a0a0a;
+            overflow-x: hidden;
+        }
+
+        /* ═══════════════════════════════
+           ANIMATED BACKGROUND
+        ═══════════════════════════════ */
+        .bg-animated {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            background: linear-gradient(
+                135deg,
+                #0d5c3a 0%,
+                #1a8a5a 25%,
+                #0d47a1 50%,
+                #7b1fa2 75%,
+                #c62828 100%
+            );
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+        }
+
+        @@keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Overlay */
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55);
+            z-index: 1;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            animation: float linear infinite;
+            z-index: 1;
+        }
+
+        @@keyframes float {
+            0%   { transform: translateY(100vh) rotate(0deg);
+                   opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg);
+                   opacity: 0; }
+        }
+
+        /* ═══════════════════════════════
+           MAIN WRAPPER
+        ═══════════════════════════════ */
+        .main-wrapper {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════
+           TOP NAV
+        ═══════════════════════════════ */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .nav-logo-placeholder {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .nav-title {
+            color: white;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-date {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 30px;
+            padding: 6px 15px;
+            cursor: pointer;
+            color: white;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-user:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* ═══════════════════════════════
+           HERO SECTION
+        ═══════════════════════════════ */
+        .hero-section {
+            padding: 60px 40px 40px;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero-title {
+            color: white;
+            font-size: clamp(32px, 5vw, 60px);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .hero-title span {
+            background: linear-gradient(
+                90deg, #fff 0%, #a8e6cf 50%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            color: rgba(255,255,255,0.75);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .hero-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 35px;
+        }
+
+        .hero-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.65);
+            font-size: 13px;
+        }
+
+        /* Quick Action Buttons */
+        .quick-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn-primary {
+            background: white;
+            color: #1a8a5a;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .action-btn-primary:hover {
+            background: #e8f5ee;
+            color: #0d5c3a;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        }
+
+        .action-btn-outline {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .action-btn-outline:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* ═══════════════════════════════
+           SPLIT SCREEN SECTION
+        ═══════════════════════════════ */
+        .split-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 0 40px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @@media (max-width: 900px) {
+            .split-section {
+                grid-template-columns: 1fr;
+                padding: 0 20px 30px;
+            }
+            .hero-section { padding: 40px 20px 30px; }
+            .top-nav { padding: 15px 20px; }
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .glass-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .glass-card-title {
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+
+        .stat-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .stat-value {
+            color: white;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.55);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Alert Items */
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+
+        .alert-item:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        .alert-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .alert-text {
+            flex: 1;
+        }
+
+        .alert-title {
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .alert-sub {
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+        }
+
+        .alert-value {
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* Recent Sales */
+        .sale-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sale-item:last-child {
+            border-bottom: none;
+        }
+
+        .sale-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(
+                135deg, #1a8a5a, #0d47a1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .sale-info { flex: 1; }
+
+        .sale-invoice {
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .sale-date {
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+        }
+
+        .sale-amount {
+            color: #a8e6cf;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* Month Total */
+        .month-total {
+            background: linear-gradient(
+                135deg,
+                rgba(26,138,90,0.4),
+                rgba(13,71,161,0.4));
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.15);
+            margin-bottom: 15px;
+        }
+
+        .month-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .month-value {
+            color: white;
+            font-size: 28px;
+            font-weight: 900;
+        }
+
+        /* Footer */
+        .home-footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+        }
+
+        /* Pulse animation */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.6; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+        /* Mobile Nav */
+@@media (max-width: 768px) {
+    .top-nav {
+        padding: 12px 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-title { font-size: 18px; }
+
+    .hero-section {
+        padding: 30px 15px 20px;
+    }
+
+    .hero-title {
+        font-size: 28px !important;
+    }
+
+    .quick-actions {
+        gap: 8px;
+    }
+
+    .action-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .split-section {
+        padding: 0 15px 20px;
+        gap: 15px;
+    }
+
+    .glass-card {
+        padding: 18px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .month-value {
+        font-size: 22px;
+    }
+
+    .nav-date {
+        display: none;
+    }
+
+    .nav-actions {
+        gap: 8px;
+    }
+
+    .action-btn-outline {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+}
+
+        @@media (max-width: 480px) {
+            .hero-title {
+                font-size: 22px !important;
+            }
+
+            .hero-badge {
+                font-size: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            /* Quick links 2 column */
+            [style*="grid-template-columns:1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Home Page Dark Mode */
+        body.dark-mode .bg-overlay {
+            background: rgba(0,0,0,0.7);
+        }
+
+        body.dark-mode .glass-card {
+            background: rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        body.dark-mode .stat-item {
+            background: rgba(0,0,0,0.3);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        body.dark-mode .sale-item {
+            border-bottom-color: rgba(255,255,255,0.05);
+        }
+
+        body.dark-mode .alert-item {
+            background: rgba(0,0,0,0.3);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+    </style>
+</head>
+<body>
+
+    @* Animated Background *@
+    <div class="bg-animated"></div>
+    <div class="bg-overlay"></div>
+
+    @* Floating Particles *@
+    @for (int p = 0; p < 8; p++)
+    {
+        int size = (p * 7) + 20;
+        int left = (p * 13) % 100;
+        int delay = p * 2;
+        int dur = 15 + (p * 3);
+        <div class="particle"
+             style="width:@(size)px;
+                height:@(size)px;
+                left:@(left)%;
+                animation-duration:@(dur);
+                animation-delay:@(delay)">
+        </div>
+    }
+
+    <div class="main-wrapper">
+
+        @* ── TOP NAV ── *@
+        <nav class="top-nav">
+            <div class="nav-brand">
+                @if (!string.IsNullOrEmpty(logoPath))
+                {
+                    <img src="@logoPath"
+                         class="nav-logo"
+                         alt="Logo" />
+                }
+                else
+                {
+                    <div class="nav-logo-placeholder">💊</div>
+                }
+                <div>
+                    <div class="nav-title">@pharmName</div>
+                    <div class="nav-subtitle">
+                        Management System
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+
+                @* Dark Mode Toggle *@
+                <button onclick="toggleDarkMode()"
+                        style="background:rgba(255,255,255,0.1);
+               border:1px solid rgba(255,255,255,0.2);
+               color:white;
+               width:38px;height:38px;
+               border-radius:10px;
+               cursor:pointer;
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               font-size:16px;
+               transition:all 0.2s"
+                        id="homeDarkBtn"
+                        title="Toggle Dark Mode">
+                    <i class="fas fa-moon" id="homeDarkIcon"></i>
+                </button>
+
+                @* Live Clock *@
+                <div style="background:rgba(255,255,255,0.1);
+            border:1px solid rgba(255,255,255,0.2);
+            color:white;
+            padding:6px 14px;
+            border-radius:10px;
+            font-size:13px;
+            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:6px"
+                     class="d-none d-md-flex">
+                    <i class="fas fa-clock"
+                       style="opacity:0.7;font-size:12px"></i>
+                    <span id="homeClockTime">00:00:00</span>
+                </div>
+
+                <div class="nav-date">
+                    <i class="fas fa-calendar-alt"></i>
+                    @today
+                </div>
+
+                <a href="@Url.Action("Index","Dashboard")"
+                   class="action-btn action-btn-outline"
+                   style="padding:8px 18px;font-size:13px">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+
+                @using (Html.BeginForm("Logout", "Account",
+                    FormMethod.Post,
+                    new { style = "display:inline" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit"
+                            class="action-btn action-btn-outline"
+                            style="padding:8px 18px;
+                               font-size:13px">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                }
+            </div>
+        </nav>
+
+        @* ── HERO SECTION ── *@
+        <div class="hero-section">
+            <div class="hero-badge">
+                <i class="fas fa-capsules me-2"></i>
+                Pharmacy Management System
+            </div>
+
+            <h1 class="hero-title">
+                Welcome to<br />
+                <span>@pharmName</span>
+            </h1>
+
+            @if (!string.IsNullOrEmpty(address) ||
+                 !string.IsNullOrEmpty(phone))
+            {
+                <div class="hero-info">
+                    @if (!string.IsNullOrEmpty(address))
+                    {
+                        <div class="hero-info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            @address
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(phone))
+                    {
+                        <div class="hero-info-item">
+                            <i class="fas fa-phone"></i>
+                            @phone
+                        </div>
+                    }
+                </div>
+            }
+
+            @* Quick Action Buttons *@
+            <div class="quick-actions">
+                <a href="@Url.Action("Create","Sale")"
+                   class="action-btn action-btn-primary">
+                    <i class="fas fa-file-invoice"></i>
+                    New Sale
+                </a>
+                <a href="@Url.Action("Create","Purchase")"
+                   class="action-btn action-btn-outline">
+                    <i class="fas fa-shopping-cart"></i>
+                    New Purchase
+                </a>
+                <a href="@Url.Action("Index","Medicine")"
+                   class="action-btn action-btn-outline">
+                    <i class="fas fa-pills"></i>
+                    Medicines
+                </a>
+                <a href="@Url.Action("Index","Dashboard")"
+                   class="action-btn action-btn-outline">
+                    <i class="fas fa-chart-bar"></i>
+                    View Reports
+                </a>
+                @if (isAdmin)
+                {
+                    <a href="@Url.Action("Index","Settings")"
+                       class="action-btn action-btn-outline">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                }
+            </div>
+        </div>
+
+        @* ── SPLIT SCREEN ── *@
+        <div class="split-section">
+
+            @* LEFT — Stats *@
+            <div>
+
+                @* Today's Summary *@
+                <div class="glass-card mb-4">
+                    <div class="glass-card-title">
+                        <i class="fas fa-sun"></i>
+                        Today's Summary
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-icon"
+                                 style="background:rgba(26,138,90,0.3)">
+                                <i class="fas fa-shopping-bag"
+                                   style="color:#a8e6cf"></i>
+                            </div>
+                            <div class="stat-value">
+                                ৳@String.Format("{0:N0}",
+                                   todaySale)
+                            </div>
+                            <div class="stat-label">
+                                Today's Sale
+                            </div>
+                            <div style="color:rgba(255,255,255,0.4);
+                                    font-size:11px;margin-top:4px">
+                                @todaySaleCount invoices
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon"
+                                 style="background:rgba(33,150,243,0.3)">
+                                <i class="fas fa-cart-arrow-down"
+                                   style="color:#90caf9"></i>
+                            </div>
+                            <div class="stat-value">
+                                ৳@String.Format("{0:N0}",
+                                   todayPurchase)
+                            </div>
+                            <div class="stat-label">
+                                Today's Purchase
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon"
+                                 style="background:rgba(255,152,0,0.3)">
+                                <i class="fas fa-pills"
+                                   style="color:#ffcc80"></i>
+                            </div>
+                            <div class="stat-value">
+                                @totalMedicines
+                            </div>
+                            <div class="stat-label">
+                                Total Medicines
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon"
+                                 style="background:rgba(156,39,176,0.3)">
+                                <i class="fas fa-users"
+                                   style="color:#ce93d8"></i>
+                            </div>
+                            <div class="stat-value">
+                                @totalCustomers
+                            </div>
+                            <div class="stat-label">
+                                Total Customers
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Month Total *@
+                <div class="glass-card">
+                    <div class="glass-card-title">
+                        <i class="fas fa-calendar"></i>
+                        This Month
+                    </div>
+                    <div class="month-total">
+                        <div class="month-label">
+                            Total Sales This Month
+                        </div>
+                        <div class="month-value">
+                            ৳ @String.Format("{0:N2}", monthSale)
+                        </div>
+                    </div>
+
+                    @* Stock Alerts *@
+                    @if (lowStock > 0 || outOfStock > 0)
+                    {
+                        if (outOfStock > 0)
+                        {
+                            <div class="alert-item">
+                                <div class="alert-icon"
+                                     style="background:rgba(211,47,47,0.3)">
+                                    <i class="fas fa-times-circle"
+                                       style="color:#ef9a9a"></i>
+                                </div>
+                                <div class="alert-text">
+                                    <div class="alert-title">
+                                        Out of Stock
+                                    </div>
+                                    <div class="alert-sub">
+                                        Needs immediate attention
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("Index",
+                                "Medicine",
+                                new{filterStock="out"})"
+                                   style="color:#ef9a9a;
+                                      font-weight:700;
+                                      font-size:18px;
+                                      text-decoration:none">
+                                    @outOfStock
+                                </a>
+                            </div>
+                        }
+
+                        if (lowStock > 0)
+                        {
+                            <div class="alert-item">
+                                <div class="alert-icon"
+                                     style="background:rgba(245,124,0,0.3)">
+                                    <i class="fas fa-exclamation-triangle"
+                                       style="color:#ffcc80"></i>
+                                </div>
+                                <div class="alert-text">
+                                    <div class="alert-title">
+                                        Low Stock
+                                    </div>
+                                    <div class="alert-sub">
+                                        Running low
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("Index",
+                                "Medicine",
+                                new{filterStock="low"})"
+                                   style="color:#ffcc80;
+                                      font-weight:700;
+                                      font-size:18px;
+                                      text-decoration:none">
+                                    @lowStock
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert-item">
+                            <div class="alert-icon"
+                                 style="background:rgba(26,138,90,0.3)">
+                                <i class="fas fa-check-circle"
+                                   style="color:#a8e6cf"></i>
+                            </div>
+                            <div class="alert-text">
+                                <div class="alert-title">
+                                    All Stocks OK
+                                </div>
+                                <div class="alert-sub">
+                                    No alerts
+                                </div>
+                            </div>
+                            <span style="color:#a8e6cf;
+                                     font-size:18px">✅</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* RIGHT — Recent Sales *@
+            <div>
+
+                @* Recent Sales *@
+                <div class="glass-card mb-4">
+                    <div class="glass-card-title">
+                        <i class="fas fa-history"></i>
+                        Recent Sales
+                        <a href="@Url.Action("Index","Sale")"
+                           style="color:rgba(255,255,255,0.5);
+                              font-size:10px;
+                              margin-left:auto;
+                              text-decoration:none">
+                            View All →
+                        </a>
+                    </div>
+
+                    @if (!recentSales.Any())
+                    {
+                        <div class="text-center py-4"
+                             style="color:rgba(255,255,255,0.3)">
+                            <i class="fas fa-inbox"
+                               style="font-size:30px;
+                                  margin-bottom:8px;
+                                  display:block"></i>
+                            No sales yet
+                        </div>
+                    }
+
+                    @foreach (var sale in recentSales)
+                    {
+                        string initial = sale.InvoiceNumber
+                            .Substring(0, 1).ToUpper();
+                        <div class="sale-item">
+                            <div class="sale-avatar">
+                                @initial
+                            </div>
+                            <div class="sale-info">
+                                <div class="sale-invoice">
+                                    @sale.InvoiceNumber
+                                </div>
+                                <div class="sale-date">
+                                    @sale.SaleDate.ToString(
+                                        "dd MMM yyyy",
+                                        System.Globalization
+                                        .CultureInfo
+                                        .InvariantCulture)
+                                    @if (!string.IsNullOrEmpty(
+                                        sale.WalkInCustomerName))
+                                    {
+                                        <span> · @sale.WalkInCustomerName</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="sale-amount">
+                                ৳@String.Format("{0:N0}",
+                                   sale.NetAmount)
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @* Quick Links *@
+                <div class="glass-card">
+                    <div class="glass-card-title">
+                        <i class="fas fa-bolt"></i>
+                        Quick Links
+                    </div>
+
+                    <div style="display:grid;
+                            grid-template-columns:1fr 1fr;
+                            gap:10px">
+                        @{
+                            var links = new[] {
+                            new { Icon="fas fa-file-invoice",
+                                  Label="Sale Invoice",
+                                  Url=Url.Action("Index","Sale"),
+                                  Color="#1a8a5a" },
+                            new { Icon="fas fa-shopping-cart",
+                                  Label="Purchase",
+                                  Url=Url.Action("Index","Purchase"),
+                                  Color="#0d47a1" },
+                            new { Icon="fas fa-users",
+                                  Label="Customers",
+                                  Url=Url.Action("Index","Customer"),
+                                  Color="#6a1b9a" },
+                            new { Icon="fas fa-pills",
+                                  Label="Medicines",
+                                  Url=Url.Action("Index","Medicine"),
+                                  Color="#e65100" },
+                            new { Icon="fas fa-chart-bar",
+                                  Label="Sales Report",
+                                  Url=Url.Action("Sales","Report"),
+                                  Color="#00695c" },
+                            new { Icon="fas fa-warehouse",
+                                  Label="Stock Report",
+                                  Url=Url.Action("Stock","Report"),
+                                  Color="#c62828" },
+                        };
+                        }
+                        @foreach (var link in links)
+                        {
+                            <a href="@link.Url"
+                               style="display:flex;
+                                  align-items:center;
+                                  gap:10px;
+                                  padding:12px;
+                                  background:rgba(255,255,255,0.06);
+                                  border:1px solid rgba(255,255,255,0.1);
+                                  border-radius:12px;
+                                  color:white;
+                                  text-decoration:none;
+                                  font-size:13px;
+                                  transition:all 0.2s"
+                               onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.transform='translateY(-2px)'"
+                               onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.transform='translateY(0)'">
+                                <div style="width:32px;height:32px;
+                                        background:@(link.Color)44;
+                                        border-radius:8px;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        flex-shrink:0">
+                                    <i class="@link.Icon"
+                                       style="color:white;
+                                          font-size:13px"></i>
+                                </div>
+                                @link.Label
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Footer *@
+        <div class="home-footer">
+            <i class="fas fa-heart"
+               style="color:#e91e63"></i>
+            @pharmName — Pharmacy Management System
+            &nbsp;|&nbsp;
+            Powered by Md Abu Nayeem Salahi
+        </div>
+
+    </div>
+
+
+    <script>
+        // Dark Mode sync করো
+        (function () {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                var icon = document.getElementById('homeDarkIcon');
+                if (icon) icon.className = 'fas fa-sun';
+            }
+        })();
+
+        // Home page dark toggle
+        document.getElementById('homeDarkBtn')
+            .addEventListener('click', function () {
+                toggleDarkMode();
+                var icon = document.getElementById('homeDarkIcon');
+                var isDark = document.body.classList
+                    .contains('dark-mode');
+                if (icon)
+                    icon.className = isDark
+                        ? 'fas fa-sun' : 'fas fa-moon';
+            });
+
+        // Live Clock for Home
+        function updateHomeClock() {
+            var now = new Date();
+            var h = String(now.getHours()).padStart(2, '0');
+            var m = String(now.getMinutes()).padStart(2, '0');
+            var s = String(now.getSeconds()).padStart(2, '0');
+            var el = document.getElementById('homeClockTime');
+            if (el) el.textContent = h + ':' + m + ':' + s;
+        }
+        updateHomeClock();
+        setInterval(updateHomeClock, 1000);
+
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

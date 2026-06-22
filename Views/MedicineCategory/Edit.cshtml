@@ -1,0 +1,67 @@
+﻿@model PharmacyProMS.Models.MedicineCategory
+@{
+    ViewBag.Title = "Edit Category";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-edit me-2"
+               style="color:#1a8a5a"></i> Edit Category
+        </h4>
+    </div>
+    <a href="@Url.Action("Index")"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body p-4">
+                @using (Html.BeginForm("Edit",
+                    "MedicineCategory", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.CategoryId)
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Category Name
+                            <span class="text-danger">*</span>
+                        </label>
+                        @Html.TextBoxFor(m => m.CategoryName,
+                            new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.CategoryName,
+                            "", new { @class = "text-danger small" })
+                    </div>
+
+                    <div class="mb-4 form-check form-switch">
+                        @Html.CheckBoxFor(m => m.IsActive,
+                            new
+                                 {
+                                     @class = "form-check-input",
+                                  role = "switch",
+                                  style = "width:50px;height:25px"
+                                 })
+                        <label class="form-check-label ms-2 fw-semibold">
+                            Is Active
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i> Update
+                        </button>
+                        <a href="@Url.Action("Index")"
+                           class="btn btn-outline-secondary px-4">
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

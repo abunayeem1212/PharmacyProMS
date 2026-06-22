@@ -1,0 +1,184 @@
+﻿@model PharmacyProMS.ViewModels.MedicineBatchViewModel
+@{
+    ViewBag.Title = "Edit Batch";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-edit me-2"
+               style="color:#1a8a5a"></i>
+            Edit Batch
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Batches</a>
+            </li>
+            <li class="breadcrumb-item active">Edit</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-boxes me-2"></i>
+                Edit Batch — @Model.BatchNumber
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Edit",
+                    "MedicineBatch", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.BatchId)
+                    @Html.ValidationSummary(false, "",
+                        new { @class = "alert alert-danger" })
+
+                    <div class="row g-3">
+
+                        @* Medicine — readonly in edit *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Medicine
+                            </label>
+                            @Html.DropDownListFor(
+                                m => m.MedicineId,
+                                new SelectList(Model.Medicines,
+                                    "MedicineId",
+                                    "MedicineName",
+                                    Model.MedicineId),
+                                new
+                                     {
+                                         @class = "form-select",
+                                      disabled = "disabled"
+                                     })
+                            @Html.HiddenFor(m => m.MedicineId)
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Supplier
+                            </label>
+                            @Html.DropDownListFor(
+                                m => m.SupplierId,
+                                new SelectList(Model.Suppliers,
+                                    "SupplierId",
+                                    "SupplierName",
+                                    Model.SupplierId),
+                                "-- Select Supplier --",
+                                new { @class = "form-select" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Batch Number
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.BatchNumber,
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(
+                                m => m.BatchNumber, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Purchase Price (৳)
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(
+                                m => m.PurchasePrice,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      type = "number",
+                                      step = "0.01"
+                                     })
+                            @Html.ValidationMessageFor(
+                                m => m.PurchasePrice, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Quantity
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.Quantity,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      type = "number",
+                                      min = "0"
+                                     })
+                            @Html.ValidationMessageFor(
+                                m => m.Quantity, "",
+                                new { @class = "text-danger small" })
+                            <small class="text-muted">
+                                ⚠️ Quantity change করলে
+                                Stock automatically update হবে
+                            </small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Manufacture Date
+                            </label>
+                            @Html.TextBoxFor(
+                                m => m.ManufactureDate,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      type = "date",
+                                      Value = Model.ManufactureDate
+                                          .HasValue
+                                          ? Model.ManufactureDate
+                                              .Value.ToString(
+                                                  "yyyy-MM-dd")
+                                          : ""
+                                     })
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Expiry Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.ExpiryDate,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      type = "date",
+                                      Value = Model.ExpiryDate
+                                          .ToString("yyyy-MM-dd")
+                                     })
+                            @Html.ValidationMessageFor(
+                                m => m.ExpiryDate, "",
+                                new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Update Batch
+                        </button>
+                        <a href="@Url.Action("Index")"
+                           class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

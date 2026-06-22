@@ -1,0 +1,225 @@
+﻿@model PharmacyProMS.ViewModels.PurchaseReturnListViewModel
+@{
+    ViewBag.Title = "Purchase Returns";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-undo-alt me-2"
+               style="color:#ff5722"></i>
+            Purchase Return Management
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Purchase Returns
+            </li>
+        </ol>
+    </div>
+    <a href="@Url.Action("SearchInvoice")"
+       class="btn btn-warning">
+        <i class="fas fa-plus me-1"></i> New Return
+    </a>
+</div>
+
+@* Summary *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-center py-3">
+            <div style="font-size:28px;font-weight:700;
+                        color:#ff5722">
+                @Model.TotalCount
+            </div>
+            <div class="text-muted small">Total Returns</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center py-3">
+            <div style="font-size:24px;font-weight:700;
+                        color:#dc3545">
+                ৳ @String.Format("{0:N2}", Model.TotalReturn)
+            </div>
+            <div class="text-muted small">Total Return Amount</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center py-3">
+            <div style="font-size:24px;font-weight:700;
+                        color:#1a8a5a">
+                @Model.Returns.Count(r =>
+                    r.ReturnDate == DateTime.Today)
+            </div>
+            <div class="text-muted small">Today's Returns</div>
+        </div>
+    </div>
+</div>
+
+@* Filter *@
+<div class="card mb-3">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Index", "PurchaseReturn",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">
+                    Search
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="searchTerm"
+                           value="@Model.SearchTerm"
+                           class="form-control"
+                           placeholder="Return no, invoice..." />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date From
+                </label>
+                <input type="date" name="dateFrom"
+                       class="form-control"
+                       value="@(Model.DateFrom.HasValue
+                           ? Model.DateFrom.Value
+                               .ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date To
+                </label>
+                <input type="date" name="dateTo"
+                       class="form-control"
+                       value="@(Model.DateTo.HasValue
+                           ? Model.DateTo.Value
+                               .ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit"
+                        class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header d-flex
+                justify-content-between">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            Return List
+            <span class="badge ms-2"
+                  style="background:#fbe9e7;color:#ff5722">
+                @Model.TotalCount Records
+            </span>
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Return No</th>
+                    <th>Return Date</th>
+                    <th>Invoice No</th>
+                    <th>Items</th>
+                    <th>Return Amount</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Returns.Any())
+                {
+                    <tr>
+                        <td colspan="8"
+                            class="text-center py-5">
+                            <i class="fas fa-inbox"
+                               style="font-size:40px;
+                                      color:#ddd"></i>
+                            <p class="text-muted mt-2">
+                                No returns found
+                            </p>
+                        </td>
+                    </tr>
+                }
+                @{ int sl = (Model.CurrentPage - 1)
+                             * Model.PageSize + 1; }
+                @foreach (var r in Model.Returns)
+                {
+                    <tr>
+                        <td class="text-muted">@sl</td>
+                        <td>
+                            <a href="@Url.Action("Details",
+                                new{id=r.PReturnId})"
+                               class="fw-semibold
+                                      text-decoration-none"
+                               style="color:#ff5722">
+                                @r.ReturnNumber
+                            </a>
+                        </td>
+                        <td>
+                            @r.ReturnDate.ToString(
+                                "dd MMM yyyy",
+                                System.Globalization
+                                .CultureInfo.InvariantCulture)
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  style="background:#e8f5ee;
+                                         color:#1a8a5a">
+                                @(r.PurchaseInvoice != null
+                                    ? r.PurchaseInvoice
+                                        .InvoiceNumber
+                                    : "—")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                @(r.ReturnItems?.Count ?? 0)
+                                items
+                            </span>
+                        </td>
+                        <td class="fw-bold"
+                            style="color:#ff5722">
+                            ৳ @String.Format("{0:N2}",
+                              r.TotalReturnAmount)
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                @(string.IsNullOrEmpty(r.Reason)
+                                    ? "—"
+                                    : r.Reason.Length > 30
+                                        ? r.Reason.Substring(0,30)
+                                            + "..."
+                                        : r.Reason)
+                            </small>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("Details",
+                                new{id=r.PReturnId})"
+                               class="btn btn-sm
+                                      btn-outline-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    sl++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

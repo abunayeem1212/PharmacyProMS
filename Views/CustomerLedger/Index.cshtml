@@ -1,0 +1,183 @@
+﻿@model PharmacyProMS.ViewModels.CustomerLedgerIndexViewModel
+@{
+    ViewBag.Title = "Customer Ledger";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-book me-2"
+               style="color:#1a8a5a"></i>
+            Customer Ledger
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Customer Ledger
+            </li>
+        </ol>
+    </div>
+</div>
+
+@* Summary Cards *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #dc3545">
+            <div style="font-size:26px;font-weight:700;
+                        color:#dc3545">
+                ৳ @String.Format("{0:N2}", Model.GrandTotal)
+            </div>
+            <div class="text-muted small">
+                Total Due from Customers
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #ff9800">
+            <div style="font-size:26px;font-weight:700;
+                        color:#ff9800">
+                @Model.DueCount
+            </div>
+            <div class="text-muted small">
+                Customers with Due
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #1a8a5a">
+            <div style="font-size:26px;font-weight:700;
+                        color:#1a8a5a">
+                @Model.TotalCount
+            </div>
+            <div class="text-muted small">
+                Total Customers
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-list me-2"></i>
+        Customer Due List
+    </div>
+    <div class="card-body p-0">
+        <table id="ledgerTable"
+               class="table table-hover w-100">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Total Credit</th>
+                    <th>Total Paid</th>
+                    <th>Due</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int sl = 1; }
+                @foreach (var c in Model.Customers)
+                {
+                    <tr>
+                        <td>@sl</td>
+                        <td class="fw-semibold">
+                            @c.CustomerName
+                        </td>
+                        <td>@c.Phone</td>
+                        <td>
+                            ৳ @String.Format("{0:N2}",
+                            c.TotalSale)
+                        </td>
+                        <td class="text-success">
+                            ৳ @String.Format("{0:N2}",
+                            c.TotalPaid)
+                        </td>
+                        <td>
+                            <span class="fw-bold
+                                @(c.TotalDue > 0
+                                    ? "text-danger"
+                                    : "text-success")">
+                                ৳ @String.Format("{0:N2}",
+                                c.TotalDue)
+                            </span>
+                        </td>
+                        <td>
+                            @if (c.TotalDue > 0)
+                            {
+                                <span class="badge bg-danger">
+                                    Due
+                                </span>
+                            }
+                            else if (c.TotalSale > 0)
+                            {
+                                <span class="badge bg-success">
+                                    Clear ✅
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    No Credit
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="@Url.Action(
+                                    "Details",
+                                    new{customerId=
+                                        c.CustomerId})"
+                                   class="btn btn-sm
+                                          btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if (c.TotalDue > 0)
+                                {
+                                    <a href="@Url.Action(
+                                        "CollectPayment",
+                                        new{customerId=
+                                            c.CustomerId})"
+                                       class="btn btn-sm
+                                              btn-success">
+                                        <i class="fas fa-money-bill-wave
+                                                   me-1"></i>
+                                        Collect
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    sl++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#ledgerTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[5, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [7] }
+            ],
+            language: {
+                search: "🔍 Search:",
+                info: "Showing _START_ to _END_ of _TOTAL_",
+                paginate: { previous: "‹", next: "›" }
+            }
+        });
+    </script>
+}

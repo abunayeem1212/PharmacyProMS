@@ -1,0 +1,362 @@
+﻿@model PharmacyProMS.ViewModels.SaleReturnCreateViewModel
+@{
+    ViewBag.Title = "Process Sale Return";
+    string itemsJson = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.InvoiceItems ??
+            new List<PharmacyProMS.ViewModels
+                .SaleReturnItemViewModel>());
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-undo me-2"
+               style="color:#e91e63"></i>
+            Process Sale Return
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">
+                    Sale Returns
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                New Return
+            </li>
+        </ol>
+    </div>
+</div>
+
+@using (Html.BeginForm("Create", "SaleReturn",
+    FormMethod.Post, new { id = "returnForm" }))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="ItemsJson" id="itemsJson" />
+    @Html.HiddenFor(m => m.InvoiceId)
+    @Html.HiddenFor(m => m.ReturnNumber)
+
+    <div class="row g-3">
+
+        @* Invoice Info *@
+        <div class="col-12">
+            <div class="card"
+                 style="border-left:4px solid #e91e63">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <small class="text-muted">
+                                Invoice No
+                            </small>
+                            <div class="fw-bold"
+                                 style="color:#1a8a5a">
+                                @Model.InvoiceNumber
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">
+                                Sale Date
+                            </small>
+                            <div>
+                                @Model.SaleDate.ToString(
+                                    "dd MMM yyyy",
+                                    System.Globalization
+                                    .CultureInfo
+                                    .InvariantCulture)
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">
+                                Customer
+                            </small>
+                            <div>@Model.CustomerName</div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <small class="text-muted">
+                                Invoice Total
+                            </small>
+                            <div class="fw-bold text-success">
+                                ৳ @String.Format("{0:N2}",
+                                  Model.InvoiceTotal)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Return Info *@
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Return Information
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label
+                                          fw-semibold">
+                                Return Number
+                            </label>
+                            @Html.TextBoxFor(
+                                m => m.ReturnNumber,
+                                new
+                                     {
+                                    @class = "form-control",
+                                    @readonly = "readonly",
+                                    style = "background:#f8f9fa"
+                                })
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label
+                                          fw-semibold">
+                                Return Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.ReturnDate,
+                                new
+                                     {
+                                    @class = "form-control",
+                                    type = "date",
+                                    Value = DateTime.Today
+                                        .ToString("yyyy-MM-dd")
+                                })
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label
+                                          fw-semibold">
+                                Reason
+                            </label>
+                            @Html.TextBoxFor(m => m.Reason,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder =
+                                        "Reason for return..."
+                                     })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Items *@
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-pills me-2"></i>
+                    Select Items to Return
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">
+                                    Select
+                                </th>
+                                <th>Medicine</th>
+                                <th>Sold Qty</th>
+                                <th style="width:120px">
+                                    Return Qty
+                                </th>
+                                <th>Unit Price</th>
+                                <th>Refund Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int idx = 0; }
+                            @foreach (var item in
+                                Model.InvoiceItems ??
+                                new List<PharmacyProMS
+                                    .ViewModels
+                                    .SaleReturnItemViewModel>())
+                            {
+                                <tr id="item-@idx">
+                                    <td class="text-center">
+                                        <input type="checkbox"
+                                               class="form-check-input
+                                                      item-check"
+                                               style="width:20px;
+                                                      height:20px"
+                                               data-idx="@idx"
+                                               onchange="toggleItem(
+                                                   @idx)" />
+                                    </td>
+                                    <td class="fw-semibold">
+                                        @item.MedicineName
+                                    </td>
+                                    <td>
+                                        <span class="badge
+                                                     bg-secondary">
+                                            Max: @item.MaxQty
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <input type="number"
+                                               class="form-control
+                                                      form-control-sm
+                                                      text-center"
+                                               id="qty-@idx"
+                                               min="1"
+                                               max="@item.MaxQty"
+                                               value="@item.MaxQty"
+                                               disabled
+                                               oninput="calcRefund(
+                                                   @idx)" />
+                                    </td>
+                                    <td>
+                                        ৳ @String.Format("{0:N2}",
+                                          item.SalePrice)
+                                    </td>
+                                    <td class="fw-semibold
+                                               text-danger"
+                                        id="refund-@idx">
+                                        ৳ 0.00
+                                    </td>
+                                </tr>
+                                idx++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @* Total *@
+        <div class="col-md-8"></div>
+        <div class="col-md-4">
+            <div class="card"
+                 style="border-top:3px solid #e91e63">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-1">
+                        Total Refund Amount
+                    </div>
+                    <div style="font-size:28px;
+                                font-weight:700;
+                                color:#e91e63"
+                         id="totalRefund">
+                        ৳ 0.00
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="button"
+                        class="btn btn-danger w-100"
+                        onclick="submitReturn()">
+                    <i class="fas fa-undo me-2"></i>
+                    Process Return
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary w-100">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+    var invoiceItems = @Html.Raw(itemsJson);
+
+    function toggleItem(idx) {
+        var chk = document.querySelector(
+            '[data-idx="' + idx + '"]');
+        var qtyInput = document.getElementById('qty-' + idx);
+
+        if (chk.checked) {
+            qtyInput.disabled = false;
+            calcRefund(idx);
+        } else {
+            qtyInput.disabled = true;
+            document.getElementById('refund-' + idx)
+                .textContent = '৳ 0.00';
+            calcTotal();
+        }
+    }
+
+    function calcRefund(idx) {
+        var qty   = parseInt(
+            document.getElementById('qty-' + idx).value)
+            || 0;
+        var price = invoiceItems[idx].SalePrice;
+        var max   = invoiceItems[idx].MaxQty;
+
+        if (qty > max) {
+            document.getElementById('qty-' + idx).value
+                = max;
+            qty = max;
+        }
+
+        var refund = qty * price;
+        document.getElementById('refund-' + idx)
+            .textContent = '৳ ' + refund.toFixed(2);
+        calcTotal();
+    }
+
+    function calcTotal() {
+        var total = 0;
+        document.querySelectorAll('.item-check')
+            .forEach(function (chk) {
+            if (chk.checked) {
+                var idx = chk.getAttribute('data-idx');
+                var qty = parseInt(
+                    document.getElementById(
+                        'qty-' + idx).value) || 0;
+                total += qty * invoiceItems[idx].SalePrice;
+            }
+        });
+        document.getElementById('totalRefund')
+            .textContent = '৳ ' + total.toFixed(2);
+    }
+
+    function submitReturn() {
+        var items = [];
+        var anySelected = false;
+
+        document.querySelectorAll('.item-check')
+            .forEach(function (chk) {
+            if (chk.checked) {
+                anySelected = true;
+                var idx = chk.getAttribute('data-idx');
+                var qty = parseInt(
+                    document.getElementById(
+                        'qty-' + idx).value) || 0;
+
+                if (qty <= 0) {
+                    toastr.error(
+                        'Quantity must be > 0!');
+                    return;
+                }
+
+                items.push({
+                    MedicineId:   invoiceItems[idx]
+                                    .MedicineId,
+                    MedicineName: invoiceItems[idx]
+                                    .MedicineName,
+                    MaxQty:       invoiceItems[idx].MaxQty,
+                    Quantity:     qty,
+                    SalePrice:    invoiceItems[idx].SalePrice,
+                    RefundAmount: qty *
+                        invoiceItems[idx].SalePrice
+                });
+            }
+        });
+
+        if (!anySelected) {
+            toastr.error(
+                'Please select at least one item!');
+            return;
+        }
+
+        document.getElementById('itemsJson').value
+            = JSON.stringify(items);
+        document.getElementById('returnForm').submit();
+    }
+    </script>
+}

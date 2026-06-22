@@ -1,0 +1,240 @@
+﻿@model PharmacyProMS.Models.PurchaseInvoice
+@{
+    ViewBag.Title = "Update Payment";
+    decimal due = (decimal)ViewBag.Due;
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-money-bill-wave me-2"
+               style="color:#1a8a5a"></i>
+            Update Payment
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">
+                    Purchase
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Details",
+                    new{id=Model.PurchaseId})">
+                    @Model.InvoiceNumber
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Update Payment
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        @* Invoice Summary Card *@
+        <div class="card mb-3"
+             style="border-left:4px solid #1a8a5a">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="text-muted small">
+                            Invoice No
+                        </div>
+                        <div class="fw-bold"
+                             style="color:#1a8a5a">
+                            @Model.InvoiceNumber
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">
+                            Supplier
+                        </div>
+                        <div class="fw-semibold">
+                            @(Model.Supplier != null
+                                ? Model.Supplier.SupplierName
+                                : "—")
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">
+                            Date
+                        </div>
+                        <div>
+                            @Model.PurchaseDate.ToString(
+                                "dd MMM yyyy",
+                                System.Globalization
+                                .CultureInfo.InvariantCulture)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Amount Summary *@
+        <div class="row g-3 mb-3">
+            <div class="col-4">
+                <div class="card text-center p-3">
+                    <div class="text-muted small">
+                        Net Amount
+                    </div>
+                    <div class="fw-bold"
+                         style="color:#2196f3">
+                        ৳ @String.Format("{0:N2}",
+                          Model.NetAmount)
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card text-center p-3">
+                    <div class="text-muted small">
+                        Paid
+                    </div>
+                    <div class="fw-bold text-success">
+                        ৳ @String.Format("{0:N2}",
+                          Model.PaidAmount)
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card text-center p-3"
+                     style="border:2px solid #dc3545">
+                    <div class="text-muted small">
+                        Due
+                    </div>
+                    <div class="fw-bold text-danger"
+                         style="font-size:18px">
+                        ৳ @String.Format("{0:N2}", due)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Payment Form *@
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                Add Payment
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("UpdatePayment",
+                    "Purchase", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Hidden("id", Model.PurchaseId)
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Payment Amount (৳)
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text
+                                         bg-white">
+                                ৳
+                            </span>
+                            <input type="number"
+                                   name="additionalPayment"
+                                   id="paymentInput"
+                                   class="form-control"
+                                   min="0.01"
+                                   step="0.01"
+                                   max="@due"
+                                   placeholder="Enter amount"
+                                   oninput="updateRemaining()" />
+                        </div>
+                        <small class="text-muted">
+                            Maximum payable:
+                            ৳ @String.Format("{0:N2}", due)
+                        </small>
+                    </div>
+
+                    @* Pay Full Due Button *@
+                    <div class="mb-3">
+                        <button type="button"
+                                class="btn btn-outline-success btn-sm"
+                                onclick="payFull()">
+                            <i class="fas fa-check me-1"></i>
+                            Pay Full Due
+                            (৳ @String.Format("{0:N2}", due))
+                        </button>
+                    </div>
+
+                    @* Remaining After Payment *@
+                    <div class="p-3 rounded mb-4"
+                         style="background:#f8f9fa"
+                         id="remainingArea"
+                         style="display:none">
+                        <div class="d-flex
+                                    justify-content-between">
+                            <span class="text-muted">
+                                After this payment, due will be:
+                            </span>
+                            <span class="fw-bold text-danger"
+                                  id="remainingAmount">
+                                ৳ @String.Format("{0:N2}", due)
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Save Payment
+                        </button>
+                        <a href="@Url.Action("Details",
+                            new{id=Model.PurchaseId})"
+                           class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    var totalDue = @due;
+
+    function payFull() {
+        document.getElementById('paymentInput')
+            .value = totalDue.toFixed(2);
+        updateRemaining();
+    }
+
+    function updateRemaining() {
+        var paid = parseFloat(
+            document.getElementById(
+                'paymentInput').value) || 0;
+        var remaining = totalDue - paid;
+
+        if (remaining < 0) remaining = 0;
+
+        document.getElementById('remainingAmount')
+            .textContent = '৳ ' + remaining.toFixed(2);
+        document.getElementById('remainingArea')
+            .style.display = 'block';
+
+        // Color change
+        var remEl = document.getElementById(
+            'remainingAmount');
+        if (remaining === 0) {
+            remEl.className = 'fw-bold text-success';
+            remEl.textContent = '৳ 0.00 (Fully Paid ✅)';
+        } else {
+            remEl.className = 'fw-bold text-danger';
+        }
+    }
+    </script>
+}

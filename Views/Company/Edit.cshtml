@@ -1,0 +1,168 @@
+﻿@model PharmacyProMS.ViewModels.CompanyViewModel
+@{
+    ViewBag.Title = "Edit Company";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-edit me-2" style="color:#1a8a5a"></i>
+            Edit Company
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Companies</a>
+            </li>
+            <li class="breadcrumb-item active">Edit</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-building me-2"></i>
+                Edit — @Model.CompanyName
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Edit", "Company",
+                    FormMethod.Post,
+                    new { enctype = "multipart/form-data" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.CompanyId)
+                    @Html.HiddenFor(m => m.LogoPath)
+                    @Html.ValidationSummary(false, "",
+                        new { @class = "alert alert-danger" })
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Company Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.CompanyName,
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.CompanyName,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Phone</label>
+                            @Html.TextBoxFor(m => m.Phone,
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Phone,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email</label>
+                            @Html.TextBoxFor(m => m.Email,
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Email,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch ms-2 mb-2">
+                                @Html.CheckBoxFor(m => m.IsActive,
+                                    new
+                                         {
+                                             @class = "form-check-input",
+                                          role = "switch",
+                                          style = "width:50px;height:25px"
+                                         })
+                                <label class="form-check-label ms-2 fw-semibold">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Address</label>
+                            @Html.TextAreaFor(m => m.Address,
+                                new { @class = "form-control", rows = "2" })
+                        </div>
+
+                        @* Current Logo + New Upload *@
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Logo</label>
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                @if (!string.IsNullOrEmpty(Model.LogoPath))
+                                {
+                                    <img src="@Model.LogoPath"
+                                         id="currentLogo"
+                                         style="width:80px;height:80px;
+                                                border-radius:10px;
+                                                object-fit:cover;
+                                                border:2px solid #1a8a5a" />
+                                    <small class="text-muted">
+                                        Current logo
+                                    </small>
+                                }
+                                else
+                                {
+                                    <div style="width:80px;height:80px;
+                                                background:#e8f5ee;
+                                                border-radius:10px;
+                                                display:flex;
+                                                align-items:center;
+                                                justify-content:center">
+                                        <i class="fas fa-building fa-2x"
+                                           style="color:#1a8a5a"></i>
+                                    </div>
+                                }
+                            </div>
+                            <input type="file" name="LogoFile"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewImage(this)" />
+                            <small class="text-muted">
+                                New image upload করলে পুরনোটা replace হবে
+                            </small>
+                            <div class="mt-2" id="imagePreview"
+                                 style="display:none">
+                                <img id="previewImg"
+                                     style="width:80px;height:80px;
+                                            border-radius:10px;
+                                            object-fit:cover" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i> Update Company
+                        </button>
+                        <a href="@Url.Action("Index")"
+                           class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#previewImg').attr('src', e.target.result);
+                $('#imagePreview').show();
+                $('#currentLogo').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    </script>
+}

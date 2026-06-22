@@ -1,0 +1,523 @@
+﻿@model PharmacyProMS.Models.PurchaseInvoice
+
+@{
+    ViewBag.Title = "Payment History";
+
+    var payments = ViewBag.Payments as List<PharmacyProMS.Models.SupplierPayment>
+                   ?? new List<PharmacyProMS.Models.SupplierPayment>();
+
+    decimal due = ViewBag.Due ?? 0m;
+    decimal totalPaid = ViewBag.TotalPaid ?? 0m;
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-history me-2"
+               style="color:#1a8a5a"></i>
+            Payment History —
+            @Model.InvoiceNumber
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Details",
+                    new{id=Model.PurchaseId})">
+                    @Model.InvoiceNumber
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Payments
+            </li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Details",
+        new{id=Model.PurchaseId})"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row g-3">
+
+    @* Left — Summary + Add Payment *@
+    <div class="col-md-4">
+
+        @* Summary Card *@
+        <div class="card mb-3"
+             style="border-top:3px solid #1a8a5a">
+            <div class="card-body text-center py-4">
+                <div class="text-muted small mb-1">
+                    @(Model.Supplier != null
+                        ? Model.Supplier.SupplierName
+                        : "—")
+                </div>
+                <div class="text-muted small mb-3">
+                    @Model.InvoiceNumber
+                </div>
+                <div class="row g-2">
+                    <div class="col-4">
+                        <div style="background:#f8f9fa;
+                                    border-radius:10px;
+                                    padding:10px">
+                            <div class="text-muted small">
+                                Total
+                            </div>
+                            <div class="fw-bold"
+                                 style="color:#2196f3;
+                                        font-size:15px">
+                                ৳@String.Format("{0:N0}",
+                                  Model.NetAmount)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div style="background:#f8f9fa;
+                                    border-radius:10px;
+                                    padding:10px">
+                            <div class="text-muted small">
+                                Paid
+                            </div>
+                            <div class="fw-bold
+                                        text-success"
+                                 style="font-size:15px">
+                                ৳@String.Format("{0:N0}",
+                                  Model.PaidAmount)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div style="background:@(due>0
+                                ? "#fff3f3" : "#f0fff4");
+                                    border-radius:10px;
+                                    padding:10px">
+                            <div class="text-muted small">
+                                Due
+                            </div>
+                            <div class="fw-bold
+                                @(due>0
+                                    ? "text-danger"
+                                    : "text-success")"
+                                 style="font-size:15px">
+                                ৳@String.Format("{0:N0}",
+                                  due)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Add Payment *@
+        @if (due > 0 &&
+             Model.InvoiceStatus != "Cancelled")
+        {
+            <div class="card">
+                <div class="card-header fw-semibold">
+                    <i class="fas fa-plus-circle
+                               me-2 text-warning"></i>
+                    Add Payment
+                </div>
+                <div class="card-body p-3">
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold small">
+                            Amount (৳)
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text
+                                         bg-white">৳</span>
+                            <input type="number"
+                                   id="purPayAmt"
+                                   class="form-control"
+                                   min="0.01"
+                                   step="0.01"
+                                   max="@due"
+                                   placeholder="0.00" />
+                        </div>
+                        <button type="button"
+                                class="btn btn-sm
+                                       btn-outline-warning
+                                       mt-1 w-100"
+                                onclick="purPayFull()">
+                            Pay Full
+                            (৳@String.Format("{0:N2}", due))
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label
+                                      fw-semibold small">
+                            Method
+                        </label>
+                        <select id="purPayMethod"
+                                class="form-select
+                                       form-select-sm">
+                            <option value="Cash">
+                                💵 Cash
+                            </option>
+                            <option value="bKash">
+                                📱 bKash
+                            </option>
+                            <option value="Nagad">
+                                📱 Nagad
+                            </option>
+                            <option value="Bank Transfer">
+                                🏦 Bank Transfer
+                            </option>
+                            <option value="Cheque">
+                                📄 Cheque
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text"
+                               id="purPayNote"
+                               class="form-control
+                                      form-control-sm"
+                               placeholder="Note..." />
+                    </div>
+                    <button type="button"
+                            class="btn btn-warning w-100"
+                            onclick="purAddPayment()">
+                        <i class="fas fa-check me-2"></i>
+                        Add Payment
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-3">
+                    <i class="fas fa-check-circle"
+                       style="font-size:35px;
+                              color:#1a8a5a"></i>
+                    <p class="fw-bold mt-2 text-success">
+                        Fully Paid ✅
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* Right — Items + Timeline *@
+    <div class="col-md-8">
+
+        @* Items Table *@
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">
+                <i class="fas fa-list me-2"></i>
+                Invoice Items
+                @if (Model.PurchaseItems != null)
+                {
+                    <span class="badge ms-2"
+                          style="background:#e8f5ee;
+                                 color:#1a8a5a">
+                        @Model.PurchaseItems.Count
+                    </span>
+                }
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Medicine</th>
+                            <th>Batch No</th>
+                            <th>Expiry</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.PurchaseItems != null)
+                        {
+                            int sl = 1;
+                            foreach (var item in
+                                Model.PurchaseItems)
+                            {
+                                bool expWarn = item.Batch
+                                    != null &&
+                                    (item.Batch.ExpiryDate
+                                    - DateTime.Today).Days
+                                    <= 90;
+                                <tr>
+                                    <td class="text-muted">
+                                        @sl
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            @(item.Medicine
+                                                != null
+                                                ? item.Medicine
+                                                    .MedicineName
+                                                : "—")
+                                        </div>
+                                        @if (item.Medicine
+                                            != null &&
+                                            !string.IsNullOrEmpty(
+                                            item.Medicine
+                                            .GenericName))
+                                        {
+                                            <small class="text-muted">
+                                                @item.Medicine
+                                                .GenericName
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.Batch != null)
+                                        {
+                                            <span class="badge bg-secondary">
+                                                @item.Batch
+                                                .BatchNumber
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.Batch != null)
+                                        {
+                                            <span class="badge
+                                                @(expWarn
+                                                    ? "bg-warning"
+                                                    : "bg-success")">
+                                                @item.Batch
+                                                .ExpiryDate
+                                                .ToString(
+                                                "MMM yyyy",
+                                                System
+                                                .Globalization
+                                                .CultureInfo
+                                                .InvariantCulture)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @item.Quantity
+                                    </td>
+                                    <td class="text-end">
+                                        ৳@String.Format(
+                                          "{0:N2}",
+                                          item.PurchasePrice)
+                                    </td>
+                                    <td class="text-end fw-bold"
+                                        style="color:#1a8a5a">
+                                        ৳@String.Format(
+                                          "{0:N2}",
+                                          item.SubTotal)
+                                    </td>
+                                </tr>
+                                sl++;
+                            }
+                        }
+                    </tbody>
+                    <tfoot style="background:#f8f9fa">
+                        <tr>
+                            <td colspan="6"
+                                class="text-end fw-bold">
+                                Net Amount:
+                            </td>
+                            <td class="text-end fw-bold"
+                                style="color:#1a8a5a">
+                                ৳@String.Format("{0:N2}",
+                                  Model.NetAmount)
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        @* Payment Timeline *@
+        <div class="card">
+            <div class="card-header fw-semibold">
+                <i class="fas fa-history me-2"></i>
+                Payment Timeline
+                <span class="badge ms-2"
+                      style="background:#e8f5ee;
+                             color:#1a8a5a">
+                    @payments.Count
+                </span>
+            </div>
+            <div class="card-body">
+
+                @if (!payments.Any())
+                {
+                    <div class="text-center py-4
+                                text-muted">
+                        <i class="fas fa-inbox"
+                           style="font-size:35px;
+                                  display:block;
+                                  margin-bottom:10px"></i>
+                        No payments yet
+                    </div>
+                }
+
+                @{ int pi = 1; }
+                @foreach (var p in payments)
+                {
+                    string pmIcon =
+                        p.PaymentMethod == "bKash" ||
+                        p.PaymentMethod == "Nagad"
+                            ? "fa-mobile-alt"
+                            : p.PaymentMethod == "Card"
+                                ? "fa-credit-card"
+                                : p.PaymentMethod
+                                    == "Cheque"
+                                    ? "fa-file-alt"
+                                    : "fa-money-bill-wave";
+
+                    <div class="d-flex gap-3 mb-3">
+                        <div style="flex-shrink:0">
+                            <div style="width:42px;
+                                        height:42px;
+                                        background:#fff3e0;
+                                        border-radius:50%;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center">
+                                <i class="fas @pmIcon"
+                                   style="color:#ff9800"></i>
+                            </div>
+                            @if (pi < payments.Count)
+                            {
+                                <div style="width:2px;
+                                            height:25px;
+                                            background:#fff3e0;
+                                            margin:3px auto">
+                                </div>
+                            }
+                        </div>
+                        <div class="flex-grow-1 p-3 rounded"
+                             style="background:#f8f9fa;
+                                    border:1px solid #eee">
+                            <div class="d-flex
+                                        justify-content-between">
+                                <span class="fw-bold"
+                                      style="color:#ff9800;
+                                             font-size:18px">
+                                    ৳ @String.Format("{0:N2}",
+                                    p.Amount)
+                                </span>
+                                <span class="badge
+                                             bg-secondary">
+                                    @p.PaymentMethod
+                                </span>
+                            </div>
+                            <div class="text-muted small
+                                        mt-1">
+                                <i class="fas fa-calendar
+                                           me-1"></i>
+                                @p.PaymentDate.ToString(
+                                    "dd MMM yyyy",
+                                    System.Globalization
+                                    .CultureInfo
+                                    .InvariantCulture)
+                                &nbsp;|&nbsp;
+                                <i class="fas fa-user
+                                           me-1"></i>
+                                @p.CreatedBy
+                                @if (!string.IsNullOrEmpty(
+                                    p.Note))
+                                {
+                                    <span>
+                                        &nbsp;|&nbsp;@p.Note
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    pi++;
+                }
+
+                @if (payments.Any())
+                {
+                    <div class="d-flex
+                                justify-content-between
+                                p-3 rounded fw-bold"
+                         style="background:#fff3e0;
+                                color:#ff9800">
+                        <span>Total Paid:</span>
+                        <span>
+                            ৳ @String.Format("{0:N2}",
+                            totalPaid)
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    var purDue   = @due;
+    var purId    = @Model.PurchaseId;
+
+    function purPayFull() {
+        document.getElementById('purPayAmt').value
+            = purDue.toFixed(2);
+    }
+
+    function purAddPayment() {
+        var amt = parseFloat(
+            document.getElementById(
+                'purPayAmt').value) || 0;
+        var method = document.getElementById(
+            'purPayMethod').value;
+        var note = document.getElementById(
+            'purPayNote').value;
+
+        if (amt <= 0 || amt > purDue) {
+            toastr.error('Invalid amount!');
+            return;
+        }
+
+        showSpinner('Processing...');
+
+        $.ajax({
+            url:  '@Url.Action("AddPayment","Purchase")',
+            type: 'POST',
+            data: {
+                purchaseId:    purId,
+                paymentAmount: amt,
+                paymentMethod: method,
+                note:          note,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .first().val()
+            },
+            success: function (res) {
+                hideSpinner();
+                if (res.success) {
+                    toastr.success(res.message);
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1200);
+                } else {
+                    toastr.error(res.message
+                        || 'Failed!');
+                }
+            },
+            error: function (xhr) {
+                hideSpinner();
+                toastr.error('Error: ' + xhr.status);
+            }
+        });
+    }
+    </script>
+    @Html.AntiForgeryToken()
+}

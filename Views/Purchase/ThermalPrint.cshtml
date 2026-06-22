@@ -1,0 +1,248 @@
+﻿@model PharmacyProMS.Models.PurchaseInvoice
+@{
+    Layout = null;
+    var setting = new PharmacyProMS.Data
+        .ApplicationDbContext()
+        .PharmacySettings.FirstOrDefault();
+    string pharmName = setting?.PharmacyName
+        ?? "PharmacyPro";
+    decimal due = Model.NetAmount - Model.PaidAmount;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Purchase — @Model.InvoiceNumber</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Courier New',monospace;
+            font-size: 12px;
+            width: 80mm;
+            margin: 0 auto;
+            padding: 5mm;
+        }
+
+        .center {
+            text-align: center
+        }
+
+        .bold {
+            font-weight: bold
+        }
+
+        .right {
+            text-align: right
+        }
+
+        .line {
+            border-top: 1px dashed #000;
+            margin: 4px 0
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .shop-name {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+            table td {
+                padding: 2px 0
+            }
+
+        .total-row {
+            font-weight: bold;
+            font-size: 13px;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+        }
+
+        @@media print {
+            body {
+                padding: 0
+            }
+
+            button {
+                display: none
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shop-name">@pharmName</div>
+    <div class="center"
+         style="font-size:11px;font-weight:bold">
+        PURCHASE INVOICE
+    </div>
+
+    @if (!string.IsNullOrEmpty(setting?.Address))
+    {
+        <div class="center"
+             style="font-size:10px">
+            @setting.Address
+        </div>
+    }
+
+    <div class="line"></div>
+
+    <div class="row">
+        <span>Invoice: @Model.InvoiceNumber</span>
+    </div>
+    <div class="row">
+        <span>
+            Date:
+            @Model.PurchaseDate.ToString("dd/MM/yyyy",
+                System.Globalization.CultureInfo
+                .InvariantCulture)
+        </span>
+    </div>
+    @if (Model.Supplier != null)
+    {
+        <div class="row">
+            <span>Supplier: @Model.Supplier.SupplierName</span>
+        </div>
+    }
+
+    <div class="line"></div>
+
+    @* Items *@
+    <table>
+        <tr style="border-bottom:1px solid #000">
+            <td class="bold">Medicine</td>
+            <td class="bold center">Batch</td>
+            <td class="bold right">Qty</td>
+            <td class="bold right">Price</td>
+            <td class="bold right">Total</td>
+        </tr>
+        @if (Model.PurchaseItems != null)
+        {
+            foreach (var item in Model.PurchaseItems)
+            {
+                string medName = item.Medicine != null
+                    ? item.Medicine.MedicineName : "—";
+                if (medName.Length > 15)
+                {
+                    medName = medName.Substring(0, 15)
+                        + "..";
+                }
+                string batchNo = item.Batch != null
+                    ? item.Batch.BatchNumber : "—";
+                <tr>
+                    <td>@medName</td>
+                    <td class="center">@batchNo</td>
+                    <td class="right">@item.Quantity</td>
+                    <td class="right">
+                        @String.Format("{0:N2}",
+                            item.PurchasePrice)
+                    </td>
+                    <td class="right">
+                        @String.Format("{0:N2}",
+                            item.SubTotal)
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+
+    <div class="line"></div>
+
+    <div class="row">
+        <span>Subtotal:</span>
+        <span>
+            ৳@String.Format("{0:N2}",
+         Model.TotalAmount)
+        </span>
+    </div>
+    @if (Model.Discount > 0)
+    {
+        <div class="row">
+            <span>Discount:</span>
+            <span>
+                -৳@String.Format("{0:N2}",
+            Model.Discount)
+            </span>
+        </div>
+    }
+
+    <div class="line"></div>
+
+    <div class="row total-row">
+        <span>TOTAL:</span>
+        <span>
+            ৳@String.Format("{0:N2}",
+         Model.NetAmount)
+        </span>
+    </div>
+    <div class="row">
+        <span>Paid:</span>
+        <span>
+            ৳@String.Format("{0:N2}",
+         Model.PaidAmount)
+        </span>
+    </div>
+    @if (due > 0)
+    {
+        <div class="row bold">
+            <span>Due:</span>
+            <span>৳@String.Format("{0:N2}", due)</span>
+        </div>
+    }
+
+    <div class="line"></div>
+
+    <div class="center"
+         style="font-size:10px;margin-top:5px">
+        Thank you!
+    </div>
+    <div class="center"
+         style="font-size:9px;color:#666;margin-top:3px">
+        Powered by PharmacyPro MS
+    </div>
+
+    <br />
+    <div style="text-align:center;margin-top:8px">
+        <button onclick="window.print()"
+                style="padding:6px 20px;
+                       background:#1a8a5a;
+                       color:white;border:none;
+                       border-radius:6px;
+                       cursor:pointer">
+            🖨️ Print
+        </button>
+        <button onclick="window.close()"
+                style="padding:6px 15px;
+                       background:#666;
+                       color:white;border:none;
+                       border-radius:6px;
+                       cursor:pointer;
+                       margin-left:5px">
+            ✕ Close
+        </button>
+    </div>
+
+    <script>
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                window.print();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

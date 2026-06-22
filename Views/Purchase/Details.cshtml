@@ -1,0 +1,354 @@
+﻿@model PharmacyProMS.Models.PurchaseInvoice
+@{
+    ViewBag.Title = "Purchase Invoice - "
+        + Model.InvoiceNumber;
+    decimal due = Model.NetAmount - Model.PaidAmount;
+}
+
+<div class="page-header d-print-none">
+    <div>
+        <h4>
+            <i class="fas fa-file-invoice me-2"
+               style="color:#1a8a5a"></i>
+            Purchase Invoice
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Purchase</a>
+            </li>
+            <li class="breadcrumb-item active">
+                @Model.InvoiceNumber
+            </li>
+        </ol>
+    </div>
+    @* Page Header Buttons *@
+    <div class="d-flex gap-2 flex-wrap">
+
+        @* Payment History *@
+        <a href="@Url.Action("PaymentHistory",
+        new{id=Model.PurchaseId})"
+           class="btn btn-outline-info">
+            <i class="fas fa-history me-1"></i>
+            Payment History
+        </a>
+
+        @* Pay Due Button *@
+        @{
+            decimal purDue = Model.NetAmount
+                - Model.PaidAmount;
+        }
+        @if (purDue > 0 &&
+             Model.InvoiceStatus != "Cancelled")
+        {
+            <a href="@Url.Action("UpdatePayment",
+            new{id=Model.PurchaseId})"
+               class="btn btn-warning">
+                <i class="fas fa-money-bill-wave me-1"></i>
+                Pay Due (৳@String.Format("{0:N2}", purDue))
+            </a>
+        }
+
+        @* Edit *@
+        @if (Model.InvoiceStatus != "Cancelled")
+        {
+            <a href="@Url.Action("Edit",
+            new{id=Model.PurchaseId})"
+               class="btn btn-outline-warning">
+                <i class="fas fa-edit me-1"></i>
+                Edit
+            </a>
+        }
+
+        @* Thermal Print *@
+        <a href="@Url.Action("ThermalPrint",
+        new{id=Model.PurchaseId})"
+           target="_blank"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-receipt me-1"></i>
+            Thermal
+        </a>
+
+        @* A4 Print *@
+        <button onclick="window.print()"
+                class="btn btn-outline-primary">
+            <i class="fas fa-print me-1"></i>
+            Print
+        </button>
+
+        @* Cancel (Admin only) *@
+        @if (User.IsInRole("Admin") &&
+             Model.InvoiceStatus != "Cancelled")
+        {
+            <a href="@Url.Action("Cancel",
+            new{id=Model.PurchaseId})"
+               class="btn btn-outline-danger">
+                <i class="fas fa-ban me-1"></i>
+                Cancel
+            </a>
+        }
+    </div>
+</div>
+
+@* Due Alert *@
+@if (due > 0)
+{
+    <div class="alert"
+         style="background:#fff3e0;
+                border-left:4px solid #ff9800;
+                border-radius:8px"
+         class="d-print-none">
+        <i class="fas fa-exclamation-triangle
+                   me-2 text-warning"></i>
+        <strong>Due Amount:</strong>
+        ৳ @String.Format("{0:N2}", due) remaining.
+        <a href="@Url.Action("UpdatePayment",
+            new { id = Model.PurchaseId })"
+           class="text-warning fw-bold ms-2">
+            Pay Now →
+        </a>
+    </div>
+}
+
+<div class="card" id="invoicePrint">
+    <div class="card-body p-4">
+
+        @* Header *@
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h3 style="color:#1a8a5a;font-weight:700">
+                    💊 PharmacyPro MS
+                </h3>
+                <p class="text-muted mb-0">
+                    Purchase Invoice
+                </p>
+            </div>
+            <div class="col-md-6 text-end">
+                <h4 class="fw-bold">
+                    @Model.InvoiceNumber
+                </h4>
+                <p class="text-muted mb-0">
+                    Date: @Model.PurchaseDate.ToString(
+            "dd MMMM yyyy",
+            System.Globalization
+            .CultureInfo.InvariantCulture)
+                </p>
+            </div>
+        </div>
+
+        <hr />
+
+        @* Supplier Info *@
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6 class="fw-bold text-muted mb-2">
+                    SUPPLIER DETAILS
+                </h6>
+                @if (Model.Supplier != null)
+                {
+                    <p class="mb-1 fw-semibold">
+                        @Model.Supplier.SupplierName
+                    </p>
+                    <p class="mb-1 text-muted">
+                        @Model.Supplier.Phone
+                    </p>
+                    <p class="mb-0 text-muted">
+                        @Model.Supplier.Address
+                    </p>
+                }
+                else
+                {
+                    <p class="text-muted">
+                        Supplier info not available
+                    </p>
+                }
+            </div>
+            <div class="col-md-6 text-end">
+                <h6 class="fw-bold text-muted mb-2">
+                    PAYMENT STATUS
+                </h6>
+                <p class="mb-1">
+                    <span class="text-muted">Net Amount:</span>
+                    <strong>
+                        ৳ @String.Format("{0:N2}",
+                        Model.NetAmount)
+                    </strong>
+                </p>
+                <p class="mb-1">
+                    <span class="text-muted">Paid:</span>
+                    <strong class="text-success">
+                        ৳ @String.Format("{0:N2}",
+                        Model.PaidAmount)
+                    </strong>
+                </p>
+                <p class="mb-0">
+                    <span class="text-muted">Due:</span>
+                    <strong class="@(due > 0
+                        ? "text-danger" : "text-success")">
+                        ৳ @String.Format("{0:N2}", due)
+                        @(due == 0 ? "✅" : "")
+                    </strong>
+                </p>
+            </div>
+        </div>
+
+        @* Items Table *@
+        @* Items Table — Batch সহ *@
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Medicine</th>
+                        <th>Batch No</th>
+                        <th>Expiry Date</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.PurchaseItems != null)
+                    {
+                        int sl = 1;
+                        foreach (var item in Model.PurchaseItems)
+                        {
+                            bool expWarn = item.Batch != null &&
+                                (item.Batch.ExpiryDate - DateTime.Today)
+                                .Days <= 90;
+
+                            <tr>
+                                <td class="text-muted">@sl</td>
+                                <td>
+                                    <div class="fw-semibold">
+                                        @(item.Medicine != null
+                                    ? item.Medicine.MedicineName
+                                    : "—")
+                                    </div>
+                                    @if (item.Medicine != null &&
+                                        !string.IsNullOrEmpty(
+                                        item.Medicine.GenericName))
+                                    {
+                                        <small class="text-muted">
+                                            @item.Medicine.GenericName
+                                        </small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Batch != null)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            @item.Batch.BatchNumber
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Batch != null)
+                                    {
+                                        <span class="badge
+                                    @(expWarn
+                                        ? "bg-warning"
+                                        : "bg-success")">
+                                            @item.Batch.ExpiryDate
+                                            .ToString("dd MMM yyyy",
+                                            System.Globalization
+                                            .CultureInfo
+                                            .InvariantCulture)
+                                        </span>
+                                        if (expWarn)
+                                        {
+                                            int d = (item.Batch
+                                                .ExpiryDate
+                                                - DateTime.Today).Days;
+                                            <small class="text-danger">
+                                                (@d days left)
+                                            </small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td class="text-center fw-semibold">
+                                    @item.Quantity
+                                </td>
+                                <td class="text-end">
+                                    ৳ @String.Format("{0:N2}",
+                                      item.PurchasePrice)
+                                </td>
+                                <td class="text-end fw-bold"
+                                    style="color:#1a8a5a">
+                                    ৳ @String.Format("{0:N2}",
+                                      item.SubTotal)
+                                </td>
+                            </tr>
+                            sl++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @* Footer *@
+        <div class="row mt-4">
+            <div class="col-md-6 text-center">
+                <div style="border-top:1px solid #333;
+                            padding-top:5px;
+                            margin-top:40px;
+                            display:inline-block;
+                            min-width:200px">
+                    Received By
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <div style="border-top:1px solid #333;
+                            padding-top:5px;
+                            margin-top:40px;
+                            display:inline-block;
+                            min-width:200px">
+                    Authorized Signature
+                </div>
+            </div>
+        </div>
+
+        <div class="text-muted small mt-3 text-center">
+            Created by: @Model.CreatedBy |
+            @Model.CreatedAt.ToString(
+                "dd MMM yyyy HH:mm",
+                System.Globalization
+                .CultureInfo.InvariantCulture)
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar,
+        .page-header, .d-print-none,
+        .alert {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+    }
+</style>

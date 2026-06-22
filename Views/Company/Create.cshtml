@@ -1,0 +1,170 @@
+﻿@model PharmacyProMS.ViewModels.CompanyViewModel
+@{
+    ViewBag.Title = "Add Company";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-plus-circle me-2" style="color:#1a8a5a"></i>
+            Add New Company
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Companies</a>
+            </li>
+            <li class="breadcrumb-item active">Add New</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-building me-2"></i> Company Information
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Create", "Company",
+                    FormMethod.Post,
+                    new
+                    {
+                        enctype = "multipart/form-data",
+                        id = "createForm"
+                    }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(false, "",
+                        new { @class = "alert alert-danger" })
+
+                    <div class="row g-3">
+
+                        @* Company Name *@
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">
+                                Company Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.CompanyName,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "Enter company name"
+                                     })
+                            @Html.ValidationMessageFor(m => m.CompanyName,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        @* Phone *@
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Phone</label>
+                            @Html.TextBoxFor(m => m.Phone,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "01XXXXXXXXX"
+                                     })
+                            @Html.ValidationMessageFor(m => m.Phone,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        @* Email *@
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">Email</label>
+                            @Html.TextBoxFor(m => m.Email,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "company@example.com"
+                                     })
+                            @Html.ValidationMessageFor(m => m.Email,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        @* IsActive *@
+                        <div class=""col-12 col-md-6" d-flex align-items-end">
+                            <div class="form-check form-switch ms-2 mb-2">
+                                @Html.CheckBoxFor(m => m.IsActive,
+                                    new
+                                         {
+                                             @class = "form-check-input",
+                                          role = "switch",
+                                          style = "width:50px;height:25px"
+                                         })
+                                <label class="form-check-label ms-2 fw-semibold">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+
+                        @* Address *@
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Address</label>
+                            @Html.TextAreaFor(m => m.Address,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      rows = "2",
+                                      placeholder = "Enter address"
+                                     })
+                        </div>
+
+                        @* Logo Upload *@
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Company Logo
+                            </label>
+                            <input type="file" name="LogoFile"
+                                   id="logoInput"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewImage(this)" />
+                            <small class="text-muted">
+                                JPG, PNG, GIF — Max 5MB
+                            </small>
+                            <div class="mt-2" id="imagePreview"
+                                 style="display:none">
+                                <img id="previewImg"
+                                     style="width:100px;height:100px;
+                                            border-radius:10px;
+                                            object-fit:cover;
+                                            border:2px solid #1a8a5a" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    @* Buttons *@
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i> Save Company
+                        </button>
+                        <a href="@Url.Action("Index")"
+                           class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#previewImg').attr('src', e.target.result);
+                $('#imagePreview').show();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    </script>
+}

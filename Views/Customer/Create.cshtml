@@ -1,0 +1,135 @@
+﻿@model PharmacyProMS.Models.Customer
+@{
+    ViewBag.Title = "Add Customer";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-user-plus me-2"
+               style="color:#1a8a5a"></i>
+            Add New Customer
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Customers</a>
+            </li>
+            <li class="breadcrumb-item active">Add New</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user me-2"></i>
+                Customer Information
+            </div>
+            <div class="card-body p-4">
+                @using (Html.BeginForm("Create", "Customer",
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(false, "",
+                        new { @class = "alert alert-danger" })
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Customer Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.CustomerName,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "Full name"
+                                     })
+                            @Html.ValidationMessageFor(
+                                m => m.CustomerName, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Phone
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.Phone,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "01XXXXXXXXX"
+                                     })
+                            @Html.ValidationMessageFor(m => m.Phone,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Email
+                            </label>
+                            @Html.TextBoxFor(m => m.Email,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "email@example.com"
+                                     })
+                            @Html.ValidationMessageFor(m => m.Email,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch ms-2 mb-2">
+                                @Html.CheckBoxFor(m => m.IsActive,
+                                    new
+                                         {
+                                             @class = "form-check-input",
+                                          role = "switch",
+                                          style = "width:50px;height:25px"
+                                         })
+                                <label class="form-check-label
+                                              ms-2 fw-semibold">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Address
+                            </label>
+                            @Html.TextAreaFor(m => m.Address,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      rows = "2",
+                                      placeholder = "Enter address"
+                                     })
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Save Customer
+                        </button>
+                        <a href="@Url.Action("Index")"
+                           class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

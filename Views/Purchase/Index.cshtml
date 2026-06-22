@@ -1,0 +1,415 @@
+﻿@model PharmacyProMS.ViewModels.PurchaseListViewModel
+@{
+    ViewBag.Title = "Purchase Invoices";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-shopping-cart me-2"
+               style="color:#1a8a5a"></i>
+            Purchase Management
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item active">Purchase</li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> New Purchase
+    </a>
+</div>
+
+@* ── Summary Cards ── *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:50px;height:50px;
+                            background:#e8f5ee;border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-file-invoice"
+                       style="color:#1a8a5a;font-size:20px"></i>
+                </div>
+                <div>
+                    <div style="font-size:22px;font-weight:700">
+                        @Model.TotalCount
+                    </div>
+                    <div class="text-muted small">
+                        Total Invoices
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:50px;height:50px;
+                            background:#e3f2fd;border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-coins"
+                       style="color:#2196f3;font-size:20px"></i>
+                </div>
+                <div>
+                    <div style="font-size:20px;font-weight:700;
+                                color:#2196f3">
+                        ৳ @Model.TotalPurchaseAmount.ToString("N2")
+                    </div>
+                    <div class="text-muted small">
+                        Total Purchase
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:50px;height:50px;
+                            background:#fce4ec;border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-exclamation-circle"
+                       style="color:#e91e63;font-size:20px"></i>
+                </div>
+                <div>
+                    <div style="font-size:20px;font-weight:700;
+                                color:#e91e63">
+                        ৳ @Model.TotalDueAmount.ToString("N2")
+                    </div>
+                    <div class="text-muted small">Total Due</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Filter ── *@
+<div class="card mb-3">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Index", "Purchase",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Search
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    @Html.TextBox("searchTerm", Model.SearchTerm,
+                        new
+                             {
+                                 @class = "form-control",
+                              placeholder = "Invoice no, supplier..."
+                             })
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Supplier
+                </label>
+                @Html.DropDownList("filterSupplier",
+                    new SelectList(Model.Suppliers,
+                        "SupplierId", "SupplierName",
+                        Model.FilterSupplier),
+                    "All Suppliers",
+                    new { @class = "form-select" })
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date From
+                </label>
+                <input type="date" name="dateFrom"
+                       class="form-control"
+                       value="@(Model.DateFrom.HasValue
+                           ? Model.DateFrom.Value
+                               .ToString("yyyy-MM-dd") : "")" />
+
+
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Date To
+                </label>
+                <input type="date" name="dateTo"
+                       class="form-control"
+                       value="@(Model.DateTo.HasValue
+                           ? Model.DateTo.Value
+                               .ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@* ── Table ── *@
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            Invoice List
+            <span class="badge ms-2"
+                  style="background:#e8f5ee;color:#1a8a5a">
+                @Model.TotalCount Records
+            </span>
+        </span>
+        <small class="text-muted">
+            Page @Model.CurrentPage of @Model.TotalPages
+        </small>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>
+                            <a href="@Url.Action("Index", new {
+                                searchTerm     = Model.SearchTerm,
+                                filterSupplier = Model.FilterSupplier,
+                                sortBy         = "InvoiceNumber",
+                                sortOrder      = Model.SortBy=="InvoiceNumber"
+                                    && Model.SortOrder=="asc"?"desc":"asc"})"
+                               class="text-decoration-none text-dark">
+                                Invoice No
+                                @if (Model.SortBy == "InvoiceNumber")
+                                {
+                                    <i class="fas fa-sort-@(Model.SortOrder=="asc"?"up":"down") ms-1"
+                                       style="color:#1a8a5a"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@Url.Action("Index", new {
+                                searchTerm     = Model.SearchTerm,
+                                filterSupplier = Model.FilterSupplier,
+                                sortBy         = "PurchaseDate",
+                                sortOrder      = Model.SortBy=="PurchaseDate"
+                                    && Model.SortOrder=="asc"?"desc":"asc"})"
+                               class="text-decoration-none text-dark">
+                                Date
+                                @if (Model.SortBy == "PurchaseDate")
+                                {
+                                    <i class="fas fa-sort-@(Model.SortOrder=="asc"?"up":"down") ms-1"
+                                       style="color:#1a8a5a"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>Supplier</th>
+                        <th>Items</th>
+                        <th>
+                            <a href="@Url.Action("Index", new {
+                                searchTerm     = Model.SearchTerm,
+                                filterSupplier = Model.FilterSupplier,
+                                sortBy         = "NetAmount",
+                                sortOrder      = Model.SortBy=="NetAmount"
+                                    && Model.SortOrder=="asc"?"desc":"asc"})"
+                               class="text-decoration-none text-dark">
+                                Net Amount
+                                @if (Model.SortBy == "NetAmount")
+                                {
+                                    <i class="fas fa-sort-@(Model.SortOrder=="asc"?"up":"down") ms-1"
+                                       style="color:#1a8a5a"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>Paid</th>
+                        <th>Due</th>
+                        <th style="width:120px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Invoices.Any())
+                    {
+                        <tr>
+                            <td colspan="9"
+                                class="text-center py-5">
+                                <i class="fas fa-inbox"
+                                   style="font-size:40px;color:#ddd"></i>
+                                <p class="text-muted mt-2">
+                                    No invoices found
+                                </p>
+                            </td>
+                        </tr>
+                    }
+                    @{ int sl = (Model.CurrentPage - 1)
+                                 * Model.PageSize + 1; }
+                    @foreach (var item in Model.Invoices)
+                    {
+                        decimal due = item.NetAmount - item.PaidAmount;
+                        <tr id="pur-row-@item.PurchaseId">
+                            <td class="text-muted">@sl</td>
+                            <td>
+                                <a href="@Url.Action("Details",
+                                    new{id=item.PurchaseId})"
+                                   class="fw-semibold text-decoration-none"
+                                   style="color:#1a8a5a">
+                                    @item.InvoiceNumber
+                                </a>
+                            </td>
+                            <td>
+                                @item.PurchaseDate.ToString(
+                                        "dd MMM yyyy",
+                                        System.Globalization
+                                        .CultureInfo.InvariantCulture)
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      style="background:#e8f5ee;
+                                             color:#1a8a5a">
+                                    @(item.Supplier != null
+        ? item.Supplier.SupplierName : "—")
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    @(item.PurchaseItems?.Count ?? 0)
+                                    items
+                                </span>
+                            </td>
+                            <td class="fw-semibold">
+                                ৳ @item.NetAmount.ToString("N2")
+                            </td>
+                            <td class="text-success">
+                                ৳ @item.PaidAmount.ToString("N2")
+                            </td>
+                            <td class="@(due > 0
+                                ? "text-danger fw-semibold" : "")">
+                                ৳ @due.ToString("N2")
+                            </td>
+                            @* Actions column এ add করো *@
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="@Url.Action("Details",
+            new{id=item.PurchaseId})"
+                                       class="btn btn-sm btn-outline-info"
+                                       title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (item.NetAmount - item.PaidAmount > 0)
+                                    {
+                                        <a href="@Url.Action("UpdatePayment",
+                new{id=item.PurchaseId})"
+                                           class="btn btn-sm btn-warning"
+                                           title="Pay Due">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </a>
+                                    }
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmDelete(
+                                            @item.PurchaseId,
+                                            '@item.InvoiceNumber',
+                                            'Purchase')"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                        sl++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* Pagination *@
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between">
+            <small class="text-muted">
+                Showing @((Model.CurrentPage-1)*Model.PageSize+1)
+                to @(Math.Min(Model.CurrentPage*Model.PageSize,
+                    Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item
+                    @(Model.CurrentPage==1?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm     = Model.SearchTerm,
+                           sortBy         = Model.SortBy,
+                           sortOrder      = Model.SortOrder,
+                           filterSupplier = Model.FilterSupplier,
+                           page           = Model.CurrentPage-1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item
+                        @(i==Model.CurrentPage?"active":"")">
+                        <a class="page-link"
+                           href="@Url.Action("Index", new {
+                               searchTerm     = Model.SearchTerm,
+                               sortBy         = Model.SortBy,
+                               sortOrder      = Model.SortOrder,
+                               filterSupplier = Model.FilterSupplier,
+                               page           = i })">@i</a>
+                        </li>
+                    }
+                <li class="page-item
+                    @(Model.CurrentPage==Model.TotalPages?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm     = Model.SearchTerm,
+                           sortBy         = Model.SortBy,
+                           sortOrder      = Model.SortOrder,
+                           filterSupplier = Model.FilterSupplier,
+                           page           = Model.CurrentPage+1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+    function deletePur(id, num) {
+        if (!confirm('Delete Invoice "' + num + '"?\n' +
+            'Stock will be reversed!')) return;
+        $.ajax({
+            url: '@Url.Action("Delete","Purchase")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $('#pur-row-' + id).fadeOut(400,
+                        function () { $(this).remove(); });
+                    toastr.success(res.message);
+                } else {
+                    toastr.error(res.message);
+                }
+            }
+        });
+    }
+    </script>
+    @Html.AntiForgeryToken()
+}

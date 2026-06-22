@@ -1,0 +1,351 @@
+﻿@model IEnumerable<PharmacyProMS.Models.Customer>
+@{
+    ViewBag.Title = "Customers";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    int pageSize = 10;
+    string search = ViewBag.SearchTerm ?? "";
+    string sortBy = ViewBag.SortBy ?? "CustomerName";
+    string sortOrder = ViewBag.SortOrder ?? "asc";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-users me-2"
+               style="color:#1a8a5a"></i>
+            Customer Management
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Customers</li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Add Customer
+    </a>
+</div>
+
+@* Stats *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-center py-3">
+            <div style="font-size:28px;font-weight:700;
+                        color:#1a8a5a">
+                @totalCount
+            </div>
+            <div class="text-muted small">Total Customers</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center py-3">
+            <div style="font-size:28px;font-weight:700;
+                        color:#28a745">
+                @Model.Count(c => c.IsActive)
+            </div>
+            <div class="text-muted small">Active</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center py-3">
+            <div style="font-size:28px;font-weight:700;
+                        color:#dc3545">
+                @Model.Count(c => !c.IsActive)
+            </div>
+            <div class="text-muted small">Inactive</div>
+        </div>
+    </div>
+</div>
+
+@* Search *@
+<div class="card mb-3">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Index", "Customer",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-5">
+                <label class="form-label fw-semibold small">
+                    Search
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="searchTerm"
+                           value="@search"
+                           class="form-control"
+                           placeholder="Name, phone, email..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">
+                    Sort By
+                </label>
+                <select name="sortBy" class="form-select">
+                    <option value="CustomerName"
+                            @(sortBy == "CustomerName" ? "selected" : "")>
+                        Name
+                    </option>
+                    <option value="CreatedAt"
+                            @(sortBy == "CreatedAt" ? "selected" : "")>
+                        Date
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Order
+                </label>
+                <select name="sortOrder" class="form-select">
+                    <option value="asc"
+                            @(sortOrder == "asc" ? "selected" : "")>
+                        A-Z
+                    </option>
+                    <option value="desc"
+                            @(sortOrder == "desc" ? "selected" : "")>
+                        Z-A
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit"
+                        class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            Customer List
+            <span class="badge ms-2"
+                  style="background:#e8f5ee;color:#1a8a5a">
+                @totalCount Records
+            </span>
+        </span>
+        <small class="text-muted">
+            Page @currentPage of @totalPages
+        </small>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table id="customerTable"
+                   class="table table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th style="width:150px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7"
+                                class="text-center py-5">
+                                <i class="fas fa-inbox"
+                                   style="font-size:40px;
+                                          color:#ddd"></i>
+                                <p class="text-muted mt-2">
+                                    No customers found
+                                </p>
+                            </td>
+                        </tr>
+                    }
+                    @{ int sl = (currentPage - 1) * pageSize + 1; }
+                    @foreach (var item in Model)
+                    {
+                        <tr id="cust-row-@item.CustomerId">
+                            <td class="text-muted">@sl</td>
+                            <td>
+                                <div class="fw-semibold">
+                                    @item.CustomerName
+                                </div>
+                            </td>
+                            <td>@item.Phone</td>
+                            <td>@item.Email</td>
+                            <td>
+                                <small class="text-muted">
+                                    @item.Address
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge @(item.IsActive
+                                    ? "bg-success":"bg-secondary")"
+                                      style="cursor:pointer"
+                                      onclick="toggleCust(
+                                          @item.CustomerId,this)">
+                                    @(item.IsActive
+                                        ?"Active":"Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="@Url.Action(
+                                        "Details",
+                                        new{id=item.CustomerId})"
+                                       class="btn btn-sm
+                                              btn-outline-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="@Url.Action(
+                                        "Edit",
+                                        new{id=item.CustomerId})"
+                                       class="btn btn-sm
+                                              btn-outline-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm
+                                               btn-outline-danger"
+                                            onclick="confirmDelete(@item.CustomerId,
+                                                '@item.CustomerName', 'Customer')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        sl++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* Pagination *@
+    @if (totalPages > 1)
+    {
+        <div class="card-footer d-flex
+                    justify-content-between">
+            <small class="text-muted">
+                Showing @((currentPage-1)*pageSize+1)
+                to @(Math.Min(currentPage*pageSize,totalCount))
+                of @totalCount
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item
+                    @(currentPage==1?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm = search,
+                           sortBy     = sortBy,
+                           sortOrder  = sortOrder,
+                           page       = currentPage-1 })">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item
+                        @(i==currentPage?"active":"")">
+                        <a class="page-link"
+                           href="@Url.Action("Index", new {
+                               searchTerm = search,
+                               sortBy     = sortBy,
+                               sortOrder  = sortOrder,
+                               page       = i })">@i</a>
+                        </li>
+                    }
+                <li class="page-item
+                    @(currentPage==totalPages?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm = search,
+                           sortBy     = sortBy,
+                           sortOrder  = sortOrder,
+                           page       = currentPage+1 })">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+    @*function deleteCust(id, name) {
+        if (!confirm('Delete "' + name + '"?')) return;
+        $.ajax({
+            url: '@Url.Action("Delete","Customer")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $('#cust-row-' + id).fadeOut(400,
+                        function () { $(this).remove(); });
+                    toastr.success(res.message);
+                } else {
+                    toastr.error(res.message);
+                }
+            }
+        });
+    }*@
+
+   
+    $('#customerTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1],
+                     [10, 25, 50, "All"]],
+        order:      [[1, 'asc']],
+        columnDefs: [
+            { orderable: false, targets: [5, 6] }
+        ],
+        language: {
+            search:   "🔍 Search:",
+            info:     "Showing _START_ to _END_ of _TOTAL_",
+            paginate: { previous: "‹", next: "›" }
+        }
+    });
+
+    function toggleCust(id, badge) {
+        $.ajax({
+            url: '@Url.Action("ToggleStatus","Customer")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $(badge)
+                        .toggleClass('bg-success bg-secondary')
+                        .text(res.isActive
+                            ? 'Active' : 'Inactive');
+                    toastr.success(res.message);
+                }
+            }
+        });
+    
+    </script>
+    @Html.AntiForgeryToken()
+
+}

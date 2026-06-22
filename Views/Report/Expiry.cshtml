@@ -1,0 +1,145 @@
+﻿@model IEnumerable<PharmacyProMS.Models.MedicineBatch>
+@{
+    ViewBag.Title = "Expiry Report";
+    string filter = ViewBag.Filter ?? "expiring";
+    DateTime today = ViewBag.Today;
+}
+
+<div class="page-header d-print-none">
+    <div>
+        <h4>
+            <i class="fas fa-calendar-times me-2"
+               style="color:#dc3545"></i>
+            Expiry Report
+        </h4>
+    </div>
+    <button onclick="window.print()"
+            class="btn btn-outline-primary">
+        <i class="fas fa-print me-1"></i> Print
+    </button>
+</div>
+
+@* Filter Tabs *@
+<div class="card mb-3 d-print-none">
+    <div class="card-body py-2">
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Expiry",
+                new{filter="expiring"})"
+               class="btn btn-sm @(filter=="expiring"
+                   ?"btn-danger":"btn-outline-danger")">
+                Expiring (90 days)
+            </a>
+            <a href="@Url.Action("Expiry",
+                new{filter="30days"})"
+               class="btn btn-sm @(filter=="30days"
+                   ?"btn-warning":"btn-outline-warning")">
+                Expiring (30 days)
+            </a>
+            <a href="@Url.Action("Expiry",
+                new{filter="expired"})"
+               class="btn btn-sm @(filter=="expired"
+                   ?"btn-dark":"btn-outline-dark")">
+                Already Expired
+            </a>
+        </div>
+    </div>
+</div>
+
+@* Table *@
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-list me-2"></i>
+        Expiry Report
+        <span class="badge ms-2"
+              style="background:#e8f5ee;color:#1a8a5a">
+            @Model.Count() Records
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th>Batch No</th>
+                    <th>Expiry Date</th>
+                    <th>Days Left</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7"
+                            class="text-center py-4 text-muted">
+                            No data found ✅
+                        </td>
+                    </tr>
+                }
+                @{ int i = 1; }
+                @foreach (var b in Model)
+                {
+                    int daysLeft = (b.ExpiryDate - today).Days;
+                    bool expired = daysLeft < 0;
+                    string badgeClass = expired
+                        ? "bg-dark"
+                        : daysLeft <= 30
+                            ? "bg-danger"
+                            : daysLeft <= 60
+                                ? "bg-warning" : "bg-info";
+
+                    <tr class="@(expired ? "table-danger" : "")">
+                        <td>@i</td>
+                        <td class="fw-semibold">
+                            @(b.Medicine != null
+                                ? b.Medicine.MedicineName : "—")
+                        </td>
+                        <td>@b.BatchNumber</td>
+                        <td class="@(expired
+                            ? "text-danger fw-bold" : "")">
+                            @b.ExpiryDate.ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            <span class="badge @badgeClass">
+                                @(expired
+                                    ? Math.Abs(daysLeft)
+                                        + " days ago"
+                                    : daysLeft + " days")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                @b.Quantity
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge @badgeClass">
+                                @(expired ? "EXPIRED"
+                                    : daysLeft <= 30
+                                        ? "Critical"
+                                        : daysLeft <= 60
+                                            ? "Warning" : "Notice")
+                            </span>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar, .d-print-none {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>

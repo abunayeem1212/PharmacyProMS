@@ -1,0 +1,130 @@
+﻿@model PharmacyProMS.ViewModels.LoginViewModel
+@{
+    ViewBag.Title = "Login";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PharmacyPro — Login</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a8a5a 0%, #0d5c3a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+            .login-logo h2 {
+                color: #1a8a5a;
+                font-weight: 700;
+                margin: 0;
+            }
+
+            .login-logo p {
+                color: #888;
+                font-size: 13px;
+            }
+
+        .btn-login {
+            background: #1a8a5a;
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+            .btn-login:hover {
+                background: #0d5c3a;
+                color: white;
+            }
+
+        .form-control:focus {
+            border-color: #1a8a5a;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-logo">
+            <h2>💊 PharmacyPro</h2>
+            <p>Pharmacy Management System</p>
+        </div>
+
+        @using (Html.BeginForm("Login", "Account",
+            new { returnUrl = ViewBag.ReturnUrl },
+            FormMethod.Post, new { @class = "mt-3" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @Html.ValidationSummary(true, "",
+                new { @class = "alert alert-danger" })
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Email,
+                    new { @class = "form-label fw-semibold" })
+                @Html.TextBoxFor(m => m.Email,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Enter your email"
+                         })
+                @Html.ValidationMessageFor(m => m.Email,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Password,
+                    new { @class = "form-label fw-semibold" })
+                @Html.PasswordFor(m => m.Password,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Enter your password"
+                         })
+                @Html.ValidationMessageFor(m => m.Password,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3 form-check">
+                @Html.CheckBoxFor(m => m.RememberMe,
+                    new { @class = "form-check-input" })
+                @Html.LabelFor(m => m.RememberMe,
+                    new { @class = "form-check-label" })
+            </div>
+
+            <button type="submit" class="btn btn-login">
+                🔐 Login
+            </button>
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                   Wellcome!!
+                </small>
+            </div>
+        }
+    </div>
+</body>
+</html>

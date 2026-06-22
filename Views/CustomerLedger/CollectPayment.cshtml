@@ -1,0 +1,296 @@
+﻿@{
+    ViewBag.Title = "Collect Payment";
+    var customer = ViewBag.Customer as
+        PharmacyProMS.Models.Customer;
+    decimal totalDue = ViewBag.TotalDue ?? 0;
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-money-bill-wave me-2"
+               style="color:#1a8a5a"></i>
+            Collect Payment
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">
+                    Customer Ledger
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Details",
+                    new { customerId =
+                        customer.CustomerId })">
+                    @customer.CustomerName
+                </a>
+            </li>
+            <li class="breadcrumb-item active">
+                Collect Payment
+            </li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Details",
+        new { customerId = customer.CustomerId })"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+
+        @* Due Card *@
+        <div class="card mb-3"
+             style="border-top:3px solid #dc3545">
+            <div class="card-body text-center py-4">
+                <div style="width:60px;height:60px;
+                            background:#e8f5ee;
+                            border-radius:50%;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            margin:0 auto 12px">
+                    <i class="fas fa-user"
+                       style="font-size:22px;
+                              color:#1a8a5a"></i>
+                </div>
+                <h5 class="fw-bold mb-1">
+                    @customer.CustomerName
+                </h5>
+                @if (!string.IsNullOrEmpty(customer.Phone))
+                {
+                    <p class="text-muted small mb-2">
+                        @customer.Phone
+                    </p>
+                }
+                <div class="text-muted small mb-1">
+                    Total Due Amount
+                </div>
+                <div style="font-size:36px;
+                            font-weight:900;
+                            color:#dc3545">
+                    ৳ @String.Format("{0:N2}", totalDue)
+                </div>
+            </div>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger mb-3">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                @TempData["Error"]
+            </div>
+        }
+
+        @* Payment Form *@
+        <div class="card">
+            <div class="card-header fw-bold">
+                <i class="fas fa-hand-holding-usd me-2"></i>
+                Receive Payment
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm(
+                    "CollectPayment",
+                    "CustomerLedger",
+                    FormMethod.Post,
+                    new { id = "payForm" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    @* Hidden customerId *@
+                    <input type="hidden"
+                           name="customerId"
+                           value="@customer.CustomerId" />
+
+                    @* Amount *@
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Payment Amount (৳)
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text
+                                         bg-white fw-bold">
+                                ৳
+                            </span>
+                            <input type="number"
+                                   name="paymentAmount"
+                                   id="payAmtInp"
+                                   class="form-control"
+                                   min="0.01"
+                                   step="0.01"
+                                   max="@totalDue"
+                                   placeholder="0.00"
+                                   oninput="updateBal()"
+                                   required />
+                        </div>
+
+                        @* Pay Full Button *@
+                        <button type="button"
+                                class="btn btn-sm
+                                       btn-outline-success
+                                       mt-2"
+                                onclick="payFull()">
+                            <i class="fas fa-check me-1"></i>
+                            Pay Full Due
+                            (৳ @String.Format("{0:N2}",
+                             totalDue))
+                        </button>
+                    </div>
+
+                    @* Remaining Preview *@
+                    <div class="p-3 rounded mb-3"
+                         style="background:#f8f9fa;
+                                border:1px solid #dee2e6">
+                        <div class="d-flex
+                                    justify-content-between">
+                            <span class="text-muted small">
+                                Remaining Due:
+                            </span>
+                            <span class="fw-bold"
+                                  id="remDue"
+                                  style="color:#dc3545">
+                                ৳ @String.Format("{0:N2}",
+                                  totalDue)
+                            </span>
+                        </div>
+                    </div>
+
+                    @* Payment Method *@
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Payment Method
+                        </label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            @foreach (var pm in new[] {
+                                new{v="Cash",
+                                    ic="fa-money-bill-wave"},
+                                new{v="bKash",
+                                    ic="fa-mobile-alt"},
+                                new{v="Nagad",
+                                    ic="fa-mobile-alt"},
+                                new{v="Card",
+                                    ic="fa-credit-card"}
+                            })
+                            {
+                                <button type="button"
+                                        class="pay-method-btn
+                                            @(pm.v == "Cash"
+                                                ? "active" : "")"
+                                        onclick="selMeth(
+                                            '@pm.v', this)"
+                                        style="flex:1;
+                                               padding:8px 5px;
+                                               border:2px solid #dee2e6;
+                                               border-radius:10px;
+                                               background:white;
+                                               cursor:pointer;
+                                               font-size:12px;
+                                               font-weight:600;
+                                               color:#555;
+                                               transition:all 0.2s">
+                                    <i class="fas @pm.ic
+                                               d-block mb-1"></i>
+                                    @pm.v
+                                </button>
+                            }
+                        </div>
+                        @* Hidden Method Input *@
+                        <input type="hidden"
+                               name="paymentMethod"
+                               id="payMethH"
+                               value="Cash" />
+                    </div>
+
+                    @* Note *@
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Note
+                            <span class="text-muted small">
+                                (Optional)
+                            </span>
+                        </label>
+                        <input type="text"
+                               name="note"
+                               class="form-control"
+                               placeholder="Payment note..." />
+                    </div>
+
+                    @* Submit *@
+                    <div class="d-flex gap-2">
+                        <button type="submit"
+                                id="submitPayBtn"
+                                class="btn btn-success
+                                       w-100 btn-lg">
+                            <i class="fas fa-check me-2"></i>
+                            Confirm Payment
+                        </button>
+                        <a href="@Url.Action("Details",
+                            new{customerId=
+                                customer.CustomerId})"
+                           class="btn btn-outline-secondary
+                                  px-4">
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    var maxDue = @totalDue;
+
+    function payFull() {
+        document.getElementById('payAmtInp').value
+            = maxDue.toFixed(2);
+        updateBal();
+    }
+
+    function updateBal() {
+        var paid = parseFloat(
+            document.getElementById('payAmtInp').value)
+            || 0;
+
+        // Max limit
+        if (paid > maxDue) {
+            document.getElementById('payAmtInp').value
+                = maxDue.toFixed(2);
+            paid = maxDue;
+        }
+
+        var rem = maxDue - paid;
+        var el  = document.getElementById('remDue');
+        el.textContent = '৳ ' + rem.toFixed(2);
+
+        if (rem === 0) {
+            el.style.color   = '#1a8a5a';
+            el.textContent  += ' ✅ Fully Cleared!';
+        } else {
+            el.style.color = '#dc3545';
+        }
+    }
+
+    function selMeth(method, btn) {
+        document.querySelectorAll('.pay-method-btn')
+            .forEach(function (b) {
+            b.style.borderColor = '#dee2e6';
+            b.style.background  = 'white';
+            b.style.color       = '#555';
+        });
+        btn.style.borderColor = '#1a8a5a';
+        btn.style.background  = '#e8f5ee';
+        btn.style.color       = '#1a8a5a';
+        document.getElementById('payMethH').value = method;
+    }
+    </script>
+}

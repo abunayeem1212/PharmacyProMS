@@ -1,0 +1,248 @@
+﻿@model PharmacyProMS.Models.Medicine
+@{
+    ViewBag.Title = "Medicine Details";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-info-circle me-2" style="color:#1a8a5a"></i>
+            Medicine Details
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Medicines</a>
+            </li>
+            <li class="breadcrumb-item active">Details</li>
+        </ol>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Edit", new { id = Model.MedicineId })"
+           class="btn btn-warning">
+            <i class="fas fa-edit me-1"></i> Edit
+        </a>
+        <a href="@Url.Action("Index")"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- INFO CARD -->
+    <div class="col-md-4">
+        <div class="card p-4 text-center">
+
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <img src="@Url.Content(Model.ImagePath)"
+                     style="width:120px;height:120px;border-radius:16px;
+                            object-fit:cover;border:3px solid #1a8a5a;
+                            margin:0 auto 15px" />
+            }
+            else
+            {
+                <div style="width:120px;height:120px;background:#e8f5ee;
+                            border-radius:16px;display:flex;
+                            align-items:center;justify-content:center;
+                            margin:0 auto 15px">
+                    <i class="fas fa-pills fa-3x"
+                       style="color:#1a8a5a"></i>
+                </div>
+            }
+
+            <h5 class="fw-bold">@Model.MedicineName</h5>
+            <p class="text-muted mb-2">@Model.GenericName</p>
+
+            <div class="d-flex justify-content-center gap-2 mb-3">
+                <span class="badge bg-info">@Model.UnitType</span>
+
+                @if (Model.IsPrescriptionRequired)
+                {
+                    <span class="badge bg-warning">Rx Required</span>
+                }
+
+                <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
+                    @(Model.IsActive ? "Active" : "Inactive")
+                </span>
+            </div>
+
+            <hr />
+
+            <div class="text-start">
+                <p class="mb-2">
+                    <i class="fas fa-building me-2 text-muted"></i>
+                    <strong>Company:</strong>
+                    @(Model.Company   != null ? Model.Company.CompanyName     : "—")
+                </p>
+
+                <p class="mb-2">
+                    <i class="fas fa-tags me-2 text-muted"></i>
+                    <strong>Category:</strong>
+                    @(Model.Category != null ? Model.Category.CategoryName : "—")
+                </p>
+
+                <p class="mb-2">
+                    <i class="fas fa-barcode me-2 text-muted"></i>
+                    <strong>Barcode:</strong>
+                    @(Model.Barcode ?? "—")
+                </p>
+
+                <p class="mb-2">
+                    <i class="fas fa-tag me-2 text-muted"></i>
+                    <strong>Sale Price:</strong>
+                    <span class="text-success fw-bold">
+                        ৳ @Model.SalePrice.ToString("N2")
+                    </span>
+                </p>
+
+                <p class="mb-0">
+                    <i class="fas fa-boxes me-2 text-muted"></i>
+                    <strong>Re-Order Level:</strong>
+                    @Model.ReOrderLevel
+                </p>
+            </div>
+        </div>
+
+        <!-- STOCK CARD -->
+        <div class="card mt-3 text-center p-3">
+            @{
+                string stockColor = Model.CurrentStock == 0
+                    ? "#dc3545"
+                    : Model.CurrentStock <= Model.ReOrderLevel
+                        ? "#ffc107"
+                        : "#1a8a5a";
+            }
+
+            <div style="font-size:36px;font-weight:700;color:@stockColor">
+                @Model.CurrentStock
+            </div>
+
+            <div class="text-muted">Current Stock</div>
+
+            @if (Model.CurrentStock == 0)
+            {
+                <span class="badge bg-danger mt-1">Out of Stock</span>
+            }
+            else if (Model.CurrentStock <= Model.ReOrderLevel)
+            {
+                <span class="badge bg-warning mt-1">Low Stock!</span>
+            }
+            else
+            {
+                <span class="badge bg-success mt-1">Stock OK</span>
+            }
+        </div>
+    </div>
+
+    <!-- BATCH TABLE -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-boxes me-2"></i>
+                Batch Information
+                <span class="badge ms-2"
+                      style="background:#e8f5ee;color:#1a8a5a">
+                    @(Model.Batches?.Count ?? 0) Batches
+                </span>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Batch No</th>
+                            <th>Purchase Price</th>
+                            <th>Mfg Date</th>
+                            <th>Expiry Date</th>
+                            <th>Qty</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (Model.Batches == null || !Model.Batches.Any())
+                        {
+                            <tr>
+                                <td colspan="7"
+                                    class="text-center text-muted py-4">
+                                    No batches found
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int b = 1;
+
+                            var batches = Model.Batches
+                                .OrderByDescending(x => x.ExpiryDate)
+                                .ToList();
+
+                            foreach (var batch in batches)
+                            {
+                                var isExpired = batch.ExpiryDate < DateTime.Today;
+                                var expiringSoon = !isExpired &&
+                                    batch.ExpiryDate <= DateTime.Today.AddDays(90);
+
+                                <tr>
+                                    <td>@b</td>
+                                    <td class="fw-semibold">@batch.BatchNumber</td>
+
+                                    <td>
+                                        ৳ @batch.PurchasePrice.ToString("N2")
+                                    </td>
+
+                                    <td>
+                                        @(batch.ManufactureDate.HasValue
+                                            ? batch.ManufactureDate.Value.ToString("dd MMM yyyy")
+                                            : "—")
+                                    </td>
+
+                                    <td class="@(isExpired
+                                        ? "text-danger fw-bold"
+                                        : expiringSoon
+                                            ? "text-warning fw-bold"
+                                            : "")">
+                                        @batch.ExpiryDate.ToString("dd MMM yyyy")
+                                    </td>
+
+                                    <td>
+                                        <span class="badge @(batch.Quantity == 0
+                                            ? "bg-danger"
+                                            : "bg-success")">
+                                            @batch.Quantity
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (isExpired)
+                                        {
+                                            <span class="badge bg-danger">Expired</span>
+                                        }
+                                        else if (expiringSoon)
+                                        {
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Good</span>
+                                        }
+                                    </td>
+                                </tr>
+
+                                b++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

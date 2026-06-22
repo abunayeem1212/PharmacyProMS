@@ -1,0 +1,169 @@
+﻿@model PharmacyProMS.ViewModels.RegisterViewModel
+@{
+    ViewBag.Title = "Register";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PharmacyPro — Register</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a8a5a 0%, #0d5c3a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 0;
+        }
+
+        .register-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .register-logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+            .register-logo h2 {
+                color: #1a8a5a;
+                font-weight: 700;
+            }
+
+        .btn-register {
+            background: #1a8a5a;
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+            .btn-register:hover {
+                background: #0d5c3a;
+                color: white;
+            }
+
+        .form-control:focus {
+            border-color: #1a8a5a;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="register-logo">
+            <h2>💊 PharmacyPro</h2>
+            <p class="text-muted">Create New Account</p>
+        </div>
+
+        @using (Html.BeginForm("Register", "Account",
+            FormMethod.Post, new { @class = "mt-2" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @Html.ValidationSummary(true, "",
+                new { @class = "alert alert-danger" })
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.FullName,
+                    new { @class = "form-label fw-semibold" })
+                @Html.TextBoxFor(m => m.FullName,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Enter full name"
+                         })
+                @Html.ValidationMessageFor(m => m.FullName,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Email,
+                    new { @class = "form-label fw-semibold" })
+                @Html.TextBoxFor(m => m.Email,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Enter email"
+                         })
+                @Html.ValidationMessageFor(m => m.Email,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Phone,
+                    new { @class = "form-label fw-semibold" })
+                @Html.TextBoxFor(m => m.Phone,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Enter phone number"
+                         })
+                @Html.ValidationMessageFor(m => m.Phone,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Password,
+                    new { @class = "form-label fw-semibold" })
+                @Html.PasswordFor(m => m.Password,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Min 6 characters"
+                         })
+                @Html.ValidationMessageFor(m => m.Password,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.ConfirmPassword,
+                    new { @class = "form-label fw-semibold" })
+                @Html.PasswordFor(m => m.ConfirmPassword,
+                    new
+                         {
+                             @class = "form-control",
+                          placeholder = "Repeat password"
+                         })
+                @Html.ValidationMessageFor(m => m.ConfirmPassword,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-4">
+                @Html.LabelFor(m => m.Role,
+                    new { @class = "form-label fw-semibold" })
+                @Html.DropDownListFor(m => m.Role,
+                    (SelectList)ViewBag.Roles,
+                    "-- Select Role --",
+                    new { @class = "form-select" })
+                @Html.ValidationMessageFor(m => m.Role,
+                    "", new { @class = "text-danger small" })
+            </div>
+
+            <button type="submit" class="btn btn-register">
+                ✅ Create Account
+            </button>
+
+            <div class="text-center mt-3">
+                <a href="@Url.Action("Login", "Account")"
+                   class="text-decoration-none"
+                   style="color:#1a8a5a">
+                    Already have account? Login
+                </a>
+            </div>
+        }
+    </div>
+</body>
+</html>

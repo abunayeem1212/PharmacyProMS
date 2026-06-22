@@ -1,0 +1,349 @@
+﻿@model PharmacyProMS.ViewModels.PurchaseReturnCreateViewModel
+@{
+    ViewBag.Title = "Process Purchase Return";
+    string itemsJson = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.InvoiceItems ??
+            new List<PharmacyProMS.ViewModels
+                .PurchaseReturnItemViewModel>());
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-undo-alt me-2"
+               style="color:#ff5722"></i>
+            Process Purchase Return
+        </h4>
+    </div>
+</div>
+
+@using (Html.BeginForm("Create", "PurchaseReturn",
+    FormMethod.Post, new { id = "purReturnForm" }))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="ItemsJson"
+           id="purItemsJson" />
+    @Html.HiddenFor(m => m.PurchaseId)
+    @Html.HiddenFor(m => m.ReturnNumber)
+
+    <div class="row g-3">
+
+        @* Invoice Info *@
+        <div class="col-12">
+            <div class="card"
+                 style="border-left:4px solid #ff5722">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <small class="text-muted">
+                                Invoice No
+                            </small>
+                            <div class="fw-bold"
+                                 style="color:#ff5722">
+                                @Model.InvoiceNumber
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">
+                                Purchase Date
+                            </small>
+                            <div>
+                                @Model.PurchaseDate.ToString(
+                                    "dd MMM yyyy",
+                                    System.Globalization
+                                    .CultureInfo
+                                    .InvariantCulture)
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">
+                                Supplier
+                            </small>
+                            <div>@Model.SupplierName</div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <small class="text-muted">
+                                Invoice Total
+                            </small>
+                            <div class="fw-bold text-success">
+                                ৳ @String.Format("{0:N2}",
+                                Model.InvoiceTotal)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Return Info *@
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Return Information
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label
+                                          fw-semibold">
+                                Return Number
+                            </label>
+                            @Html.TextBoxFor(
+                                m => m.ReturnNumber,
+                                new
+                                     {
+                                    @class = "form-control",
+                                    @readonly = "readonly",
+                                    style = "background:#f8f9fa"
+                                })
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label
+                                          fw-semibold">
+                                Return Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.ReturnDate,
+                                new
+                                     {
+                                    @class = "form-control",
+                                    type = "date",
+                                    Value = DateTime.Today
+                                        .ToString("yyyy-MM-dd")
+                                })
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label
+                                          fw-semibold">
+                                Reason
+                            </label>
+                            @Html.TextBoxFor(m => m.Reason,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder =
+                                        "Reason for return..."
+                                     })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Items Table *@
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-pills me-2"></i>
+                    Select Items to Return
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">
+                                    Select
+                                </th>
+                                <th>Medicine</th>
+                                <th>Purchased Qty</th>
+                                <th style="width:120px">
+                                    Return Qty
+                                </th>
+                                <th>Purchase Price</th>
+                                <th>Return Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int idx = 0; }
+                            @foreach (var item in
+                                Model.InvoiceItems ??
+                                new List<PharmacyProMS
+                                    .ViewModels
+                                    .PurchaseReturnItemViewModel>())
+                            {
+                                <tr id="pitem-@idx">
+                                    <td class="text-center">
+                                        <input type="checkbox"
+                                               class="form-check-input
+                                                      pitem-check"
+                                               style="width:20px;
+                                                      height:20px"
+                                               data-idx="@idx"
+                                               onchange="ptoggleItem(
+                                                   @idx)" />
+                                    </td>
+                                    <td class="fw-semibold">
+                                        @item.MedicineName
+                                    </td>
+                                    <td>
+                                        <span class="badge
+                                                     bg-secondary">
+                                            Max: @item.MaxQty
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <input type="number"
+                                               id="pqty-@idx"
+                                               class="form-control
+                                                      form-control-sm
+                                                      text-center"
+                                               min="1"
+                                               max="@item.MaxQty"
+                                               value="@item.MaxQty"
+                                               disabled
+                                               oninput="pcalcRefund(
+                                                   @idx)" />
+                                    </td>
+                                    <td>
+                                        ৳ @String.Format(
+                                        "{0:N2}",
+                                        item.PurchasePrice)
+                                    </td>
+                                    <td class="fw-semibold"
+                                        style="color:#ff5722"
+                                        id="preturn-@idx">
+                                        ৳ 0.00
+                                    </td>
+                                </tr>
+                                idx++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @* Total *@
+        <div class="col-md-8"></div>
+        <div class="col-md-4">
+            <div class="card"
+                 style="border-top:3px solid #ff5722">
+                <div class="card-body text-center">
+                    <div class="text-muted mb-1">
+                        Total Return Amount
+                    </div>
+                    <div style="font-size:28px;
+                                font-weight:700;
+                                color:#ff5722"
+                         id="purTotalReturn">
+                        ৳ 0.00
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="button"
+                        class="btn w-100"
+                        style="background:#ff5722;
+                               color:white"
+                        onclick="submitPurReturn()">
+                    <i class="fas fa-undo-alt me-2"></i>
+                    Process Return
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary w-100">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+    var purItems = @Html.Raw(itemsJson);
+
+    function ptoggleItem(idx) {
+        var chk = document.querySelector(
+            '[data-idx="' + idx + '"]');
+        var qtyInput = document.getElementById(
+            'pqty-' + idx);
+
+        if (chk.checked) {
+            qtyInput.disabled = false;
+            pcalcRefund(idx);
+        } else {
+            qtyInput.disabled = true;
+            document.getElementById('preturn-' + idx)
+                .textContent = '৳ 0.00';
+            pcalcTotal();
+        }
+    }
+
+    function pcalcRefund(idx) {
+        var qty   = parseInt(
+            document.getElementById('pqty-' + idx).value)
+            || 0;
+        var price = purItems[idx].PurchasePrice;
+        var max   = purItems[idx].MaxQty;
+
+        if (qty > max) {
+            document.getElementById('pqty-' + idx).value
+                = max;
+            qty = max;
+        }
+
+        var ret = qty * price;
+        document.getElementById('preturn-' + idx)
+            .textContent = '৳ ' + ret.toFixed(2);
+        pcalcTotal();
+    }
+
+    function pcalcTotal() {
+        var total = 0;
+        document.querySelectorAll('.pitem-check')
+            .forEach(function (chk) {
+            if (chk.checked) {
+                var idx = chk.getAttribute('data-idx');
+                var qty = parseInt(
+                    document.getElementById(
+                        'pqty-' + idx).value) || 0;
+                total += qty * purItems[idx].PurchasePrice;
+            }
+        });
+        document.getElementById('purTotalReturn')
+            .textContent = '৳ ' + total.toFixed(2);
+    }
+
+    function submitPurReturn() {
+        var items       = [];
+        var anySelected = false;
+
+        document.querySelectorAll('.pitem-check')
+            .forEach(function (chk) {
+            if (chk.checked) {
+                anySelected = true;
+                var idx = chk.getAttribute('data-idx');
+                var qty = parseInt(
+                    document.getElementById(
+                        'pqty-' + idx).value) || 0;
+
+                if (qty <= 0) {
+                    toastr.error('Quantity must be > 0!');
+                    return;
+                }
+
+                items.push({
+                    MedicineId:    purItems[idx].MedicineId,
+                    MedicineName:  purItems[idx].MedicineName,
+                    MaxQty:        purItems[idx].MaxQty,
+                    Quantity:      qty,
+                    PurchasePrice: purItems[idx].PurchasePrice,
+                    ReturnAmount:  qty *
+                        purItems[idx].PurchasePrice
+                });
+            }
+        });
+
+        if (!anySelected) {
+            toastr.error(
+                'Please select at least one item!');
+            return;
+        }
+
+        document.getElementById('purItemsJson').value
+            = JSON.stringify(items);
+        document.getElementById('purReturnForm').submit();
+    }
+    </script>
+}

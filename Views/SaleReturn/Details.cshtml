@@ -1,0 +1,144 @@
+﻿@model PharmacyProMS.Models.SaleReturn
+@{
+    ViewBag.Title = "Return Details";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-undo me-2"
+               style="color:#e91e63"></i>
+            Sale Return Details
+        </h4>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()"
+                class="btn btn-outline-primary d-print-none">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+        <a href="@Url.Action("Index")"
+           class="btn btn-outline-secondary d-print-none">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-4">
+
+        @* Header *@
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h4 style="color:#e91e63;font-weight:700">
+                    SALE RETURN
+                </h4>
+                <p class="text-muted mb-0">
+                    Return No:
+                    <strong>@Model.ReturnNumber</strong>
+                </p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p class="mb-1">
+                    <span class="text-muted">Return Date:</span>
+                    <strong>
+                        @Model.ReturnDate.ToString(
+                            "dd MMMM yyyy",
+                            System.Globalization
+                            .CultureInfo.InvariantCulture)
+                    </strong>
+                </p>
+                <p class="mb-0">
+                    <span class="text-muted">Invoice No:</span>
+                    <strong style="color:#1a8a5a">
+                        @(Model.SaleInvoice != null
+                            ? Model.SaleInvoice.InvoiceNumber
+                            : "—")
+                    </strong>
+                </p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Reason))
+        {
+            <div class="alert"
+                 style="background:#fce4ec;
+                        border-color:#e91e63;
+                        color:#e91e63">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Reason:</strong> @Model.Reason
+            </div>
+        }
+
+        @* Items Table *@
+        <table class="table table-bordered mb-4">
+            <thead style="background:#fce4ec">
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th class="text-center">Return Qty</th>
+                    <th class="text-end">Refund Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int i = 1; }
+                @foreach (var item in
+                    Model.ReturnItems ??
+                    new List<PharmacyProMS
+                        .Models.SaleReturnItem>())
+                {
+                    <tr>
+                        <td>@i</td>
+                        <td class="fw-semibold">
+                            @(item.Medicine != null
+                                ? item.Medicine.MedicineName
+                                : "—")
+                        </td>
+                        <td class="text-center">
+                            @item.Quantity
+                        </td>
+                        <td class="text-end fw-semibold">
+                            ৳ @String.Format("{0:N2}",
+                              item.RefundAmount)
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+            <tfoot>
+                <tr style="background:#fce4ec">
+                    <td colspan="3"
+                        class="text-end fw-bold"
+                        style="color:#e91e63">
+                        Total Refund:
+                    </td>
+                    <td class="text-end fw-bold"
+                        style="color:#e91e63;font-size:18px">
+                        ৳ @String.Format("{0:N2}",
+                          Model.TotalReturnAmount)
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="text-muted small">
+            Created by: @Model.CreatedBy |
+            @Model.CreatedAt.ToString(
+                "dd MMM yyyy HH:mm",
+                System.Globalization
+                .CultureInfo.InvariantCulture)
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .sidebar, .topbar, .d-print-none {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>

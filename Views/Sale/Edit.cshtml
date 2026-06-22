@@ -1,0 +1,203 @@
+﻿@model PharmacyProMS.Models.SaleInvoice
+@{
+    ViewBag.Title = "Edit Invoice — "
+        + Model.InvoiceNumber;
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-edit me-2"
+               style="color:#1a8a5a"></i>
+            Edit Invoice — @Model.InvoiceNumber
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Sales</a>
+            </li>
+            <li class="breadcrumb-item active">Edit</li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Details",
+        new{id=Model.InvoiceId})"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+@* Warning *@
+<div class="alert alert-warning mb-3">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Limited Edit:</strong>
+    Medicine items পরিবর্তন করা যাবে না।
+    শুধু Date, Discount, Note, Payment Method
+    পরিবর্তন করা যাবে।
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header fw-bold">
+                <i class="fas fa-edit me-2"></i>
+                Edit Invoice Details
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Edit", "Sale",
+                    new { id = Model.InvoiceId },
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3">
+
+                        @* Invoice No (Readonly) *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Invoice No
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="@Model.InvoiceNumber"
+                                   readonly
+                                   style="background:#f8f9fa" />
+                        </div>
+
+                        @* Sale Date *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Sale Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   name="saleDate"
+                                   class="form-control"
+                                   value="@Model.SaleDate
+                                       .ToString(" yyyy-MM-dd")" />
+                        </div>
+
+                        @* Current Total (Readonly) *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Subtotal
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text
+                                             bg-white">৳</span>
+                                <input type="text"
+                                       class="form-control"
+                                       value="@String.Format("{0:N2}",
+                                           Model.TotalAmount)"
+                                       readonly
+                                       style="background:#f8f9fa" />
+                            </div>
+                        </div>
+
+                        @* Discount *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Discount (৳)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text
+                                             bg-white">৳</span>
+                                <input type="number"
+                                       name="discount"
+                                       id="discInp"
+                                       class="form-control"
+                                       min="0" step="0.01"
+                                       value="@Model.Discount"
+                                       oninput="recalc()" />
+                            </div>
+                        </div>
+
+                        @* Payment Method *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Payment Method
+                            </label>
+                            <select name="paymentMethod"
+                                    class="form-select">
+                                @foreach (var pm in new[] {
+                                    "Cash","bKash","Nagad","Card"
+                                })
+                                {
+                                    <option value="@pm"
+                                            @(Model.PaymentMethod == pm ? "selected" : "")>
+                                        @pm
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        @* Net Amount Preview *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Net Amount
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text
+                                             bg-white">৳</span>
+                                <input type="text"
+                                       id="netPreview"
+                                       class="form-control
+                                              fw-bold"
+                                       style="background:#e8f5ee;
+                                              color:#1a8a5a"
+                                       value="@String.Format("{0:N2}",
+                                           Model.NetAmount)"
+                                       readonly />
+                            </div>
+                        </div>
+
+                        @* Note *@
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Note
+                            </label>
+                            <textarea name="note"
+                                      class="form-control"
+                                      rows="2"
+                                      placeholder="Invoice note...">@Model.Note</textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Save Changes
+                        </button>
+                        <a href="@Url.Action("Details",
+                            new{id=Model.InvoiceId})"
+                           class="btn btn-outline-secondary px-4">
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    var subtotal = @Model.TotalAmount;
+    var vat      = @Model.VatAmount;
+
+    function recalc() {
+        var disc = parseFloat(
+            document.getElementById('discInp').value)
+            || 0;
+        var net = subtotal - disc + vat;
+        if (net < 0) net = 0;
+        document.getElementById('netPreview')
+            .value = net.toFixed(2);
+    }
+    </script>
+}

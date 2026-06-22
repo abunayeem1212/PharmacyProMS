@@ -1,0 +1,672 @@
+﻿@model PharmacyProMS.ViewModels.MedicineViewModel
+@{
+    ViewBag.Title = "Edit Medicine";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-edit me-2" style="color:#1a8a5a"></i>
+            Edit Medicine
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index")">Medicines</a>
+            </li>
+            <li class="breadcrumb-item active">Edit</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-pills me-2"></i>
+                Edit — @Model.MedicineName
+            </div>
+
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Edit", "Medicine",
+                    FormMethod.Post,
+                    new { enctype = "multipart/form-data" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.MedicineId)
+                    @Html.HiddenFor(m => m.ImagePath)
+                    @Html.HiddenFor(m => m.CurrentStock)
+
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                    <div class="row g-3">
+
+                        <!-- Medicine Name -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">
+                                Medicine Name <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.MedicineName,
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.MedicineName,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <!-- Generic -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold">
+                                Generic Name
+                            </label>
+                            @Html.TextBoxFor(m => m.GenericName,
+                                new { @class = "form-control" })
+                        </div>
+
+                        <!-- Company -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">
+                                Company <span class="text-danger">*</span>
+                            </label>
+                            @Html.DropDownListFor(m => m.CompanyId,
+                                new SelectList(Model.Companies,
+                                    "CompanyId", "CompanyName", Model.CompanyId),
+                                "-- Select --",
+                                new { @class = "form-select" })
+                            @Html.ValidationMessageFor(m => m.CompanyId,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            @Html.DropDownListFor(m => m.CategoryId,
+                                new SelectList(Model.Categories,
+                                    "CategoryId", "CategoryName", Model.CategoryId),
+                                "-- Select --",
+                                new { @class = "form-select" })
+                            @Html.ValidationMessageFor(m => m.CategoryId,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <!-- Unit -->
+                        <div class="col-12 col-md-4">
+                            <label class="form-label fw-semibold">
+                                Unit Type <span class="text-danger">*</span>
+                            </label>
+                            @Html.DropDownListFor(m => m.UnitType,
+                                new SelectList(new[]
+                                {
+                                    "Tablet","Capsule","Syrup",
+                                    "Injection","Cream","Drop",
+                                    "Inhaler","Powder","Other"
+                                }, Model.UnitType),
+                                "-- Select --",
+                                new { @class = "form-select" })
+                        </div>
+
+                        <!-- Price -->
+                        <div class="col-12 col-md-3">
+                            <label class="form-label fw-semibold">
+                                Sale Price (৳) <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.SalePrice,
+                                new
+                                {
+                                    @class = "form-control",
+                                    type = "number",
+                                    step = "0.01",
+                                    min = "0"
+                                })
+                            @Html.ValidationMessageFor(m => m.SalePrice,
+                                "", new { @class = "text-danger small" })
+                        </div>
+
+                        <!-- Reorder -->
+                        <div class="col-12 col-md-3">
+                            <label class="form-label fw-semibold">
+                                Re-Order Level
+                            </label>
+                            @Html.TextBoxFor(m => m.ReOrderLevel,
+                                new
+                                {
+                                    @class = "form-control",
+                                    type = "number",
+                                    min = "0"
+                                })
+                        </div>
+
+                        <!-- Barcode -->
+                        <div class="col-12 col-md-3">
+                            <label class="form-label fw-semibold">
+                                Barcode
+                            </label>
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.Barcode,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        id = "barcodeField",
+                                        autocomplete = "off"
+                                    })
+                                <button type="button"
+                                        class="btn btn-outline-primary"
+                                        onclick="openBarcodeScanner()"
+                                        title="Open Camera Scanner"
+                                        id="scanBtn">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">
+                                USB scanner বা camera দিয়ে scan করুন
+                            </small>
+                        </div>
+
+                        <!-- Switches -->
+                        <div class="col-12 col-md-3 d-flex flex-column justify-content-end gap-2 pb-1">
+                            <div class="form-check form-switch">
+                                @Html.CheckBoxFor(m => m.IsPrescriptionRequired,
+                                    new
+                                    {
+                                        @class = "form-check-input",
+                                        role = "switch"
+                                    })
+                                <label class="form-check-label ms-2">
+                                    Rx Required
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch">
+                                @Html.CheckBoxFor(m => m.IsActive,
+                                    new
+                                    {
+                                        @class = "form-check-input",
+                                        role = "switch"
+                                    })
+                                <label class="form-check-label ms-2">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Image -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Medicine Image
+                            </label>
+
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                                {
+                                    <img src="@Url.Content(Model.ImagePath)"
+                                         id="currentImg"
+                                         style="width:80px;height:80px;border-radius:10px;object-fit:cover;border:2px solid #1a8a5a" />
+                                }
+                                else
+                                {
+                                    <div id="imagePlaceholder" style="width:80px;height:80px;background:#e8f5ee;border-radius:10px;display:flex;align-items:center;justify-content:center">
+                                        <i class="fas fa-pills fa-2x" style="color:#1a8a5a"></i>
+                                    </div>
+                                }
+                            </div>
+
+                            <input type="file"
+                                   name="ImageFile"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewImg(this)" />
+                            <small class="text-muted">
+                                JPG, PNG — Max 5MB
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Update Medicine
+                        </button>
+
+                        <a href="@Url.Action("Index")"
+                           class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Barcode Scanner Modal ── *@
+<div class="modal fade" id="barcodeScanModal"
+     tabindex="-1"
+     data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header"
+                 style="background:#1a8a5a;color:white">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    Scan Barcode
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        onclick="closeBarcodeScanner()">
+                </button>
+            </div>
+
+            <div class="modal-body p-3">
+
+                @* Camera Preview *@
+                <div id="modalCameraArea">
+                    <div style="position:relative;
+                                width:100%">
+                        <video id="medicineCamera"
+                               style="width:100%;
+                                      border-radius:10px;
+                                      border:3px solid #1a8a5a"
+                               autoplay
+                               playsinline></video>
+
+                        @* Scan Line *@
+                        <div id="modalScanLine"
+                             style="position:absolute;
+                                    top:0;left:0;
+                                    width:100%;height:3px;
+                                    background:#1a8a5a;
+                                    box-shadow:0 0 10px #1a8a5a;
+                                    animation:scanAnim 2s
+                                    linear infinite">
+                        </div>
+
+                        @* Corner Markers *@
+                        <div style="position:absolute;
+                                    top:10px;left:10px;
+                                    width:35px;height:35px;
+                                    border-top:4px solid #1a8a5a;
+                                    border-left:4px solid #1a8a5a;
+                                    border-radius:2px">
+                        </div>
+                        <div style="position:absolute;
+                                    top:10px;right:10px;
+                                    width:35px;height:35px;
+                                    border-top:4px solid #1a8a5a;
+                                    border-right:4px solid #1a8a5a;
+                                    border-radius:2px">
+                        </div>
+                        <div style="position:absolute;
+                                    bottom:10px;left:10px;
+                                    width:35px;height:35px;
+                                    border-bottom:4px solid #1a8a5a;
+                                    border-left:4px solid #1a8a5a;
+                                    border-radius:2px">
+                        </div>
+                        <div style="position:absolute;
+                                    bottom:10px;right:10px;
+                                    width:35px;height:35px;
+                                    border-bottom:4px solid #1a8a5a;
+                                    border-right:4px solid #1a8a5a;
+                                    border-radius:2px">
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <span class="badge bg-danger">
+                            <i class="fas fa-circle me-1"></i>
+                            Scanning...
+                        </span>
+                    </div>
+                </div>
+
+                @* Scanned Result *@
+                <div id="scanSuccessArea"
+                     style="display:none"
+                     class="text-center py-3">
+                    <div style="width:70px;height:70px;
+                                background:#e8f5ee;
+                                border-radius:50%;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                margin:0 auto 15px">
+                        <i class="fas fa-check"
+                           style="color:#1a8a5a;
+                                  font-size:30px"></i>
+                    </div>
+                    <h5 class="fw-bold text-success">
+                        Barcode Scanned!
+                    </h5>
+                    <div class="p-3 rounded mb-3"
+                         style="background:#e8f5ee">
+                        <code id="scannedCodeDisplay"
+                              style="font-size:18px;
+                                     color:#1a8a5a;
+                                     font-weight:700">
+                        </code>
+                    </div>
+                    <div class="d-flex gap-2
+                                justify-content-center">
+                        <button type="button"
+                                class="btn btn-success px-4"
+                                onclick="confirmBarcode()">
+                            <i class="fas fa-check me-2"></i>
+                            Use This Barcode
+                        </button>
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                onclick="rescan()">
+                            <i class="fas fa-redo me-2"></i>
+                            Rescan
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <small class="text-muted me-auto">
+                    <i class="fas fa-info-circle me-1"></i>
+                    USB scanner দিয়ে সরাসরি scan করলেও কাজ করবে
+                </small>
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        onclick="closeBarcodeScanner()">
+                    Cancel
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+
+    <style>
+        @@keyframes scanAnim {
+            0% {
+                top: 0%;
+            }
+
+            50% {
+                top: calc(100% - 3px);
+            }
+
+            100% {
+                top: 0%;
+            }
+        }
+    </style>
+
+    <script>
+        var medCameraStream = null;
+        var medScanCooldown = false;
+        var scannedBarcode = '';
+        var scanModal = null;
+
+        // Image Preview Function
+        function previewImg(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    // Check if currentImg exists, if not create it
+                    if ($('#currentImg').length === 0) {
+                        // Remove placeholder if exists
+                        $('#imagePlaceholder').remove();
+                        // Create new image element
+                        $('<img id="currentImg" style="width:80px;height:80px;border-radius:10px;object-fit:cover;border:2px solid #1a8a5a" />')
+                            .insertBefore(input);
+                    }
+                    $('#currentImg').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // ── Page load এ Modal init ──────────────────────
+        document.addEventListener('DOMContentLoaded',
+            function () {
+                scanModal = new bootstrap.Modal(
+                    document.getElementById(
+                        'barcodeScanModal'));
+
+                // USB Scanner support
+                document.getElementById('barcodeField')
+                    .addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            var val = this.value.trim();
+                            if (val) {
+                                showUsbScanSuccess(val);
+                            }
+                        }
+                    });
+            });
+
+        // ── USB Scanner Success Effect ──────────────────
+        function showUsbScanSuccess(code) {
+            playBeep();
+            var field = document.getElementById('barcodeField');
+            field.style.borderColor = '#1a8a5a';
+            field.style.background = '#e8f5ee';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(26,138,90,0.25)';
+
+            if (typeof toastr !== 'undefined') {
+                toastr.success('Barcode scanned: ' + code,
+                    'USB Scanner', { timeOut: 2000 });
+            }
+
+            setTimeout(function () {
+                field.style.borderColor = '';
+                field.style.background = '';
+                field.style.boxShadow = '';
+            }, 2000);
+        }
+
+        // ── Open Camera Modal ───────────────────────────
+        function openBarcodeScanner() {
+            scannedBarcode = '';
+
+            // Modal show করো
+            scanModal.show();
+
+            // Camera success area hide করো
+            document.getElementById('modalCameraArea')
+                .style.display = 'block';
+            document.getElementById('scanSuccessArea')
+                .style.display = 'none';
+
+            // Camera start করো
+            startMedicineCamera();
+        }
+
+        // ── Start Camera ────────────────────────────────
+        function startMedicineCamera() {
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            })
+                .then(function (stream) {
+                    medCameraStream = stream;
+                    var video = document.getElementById(
+                        'medicineCamera');
+                    video.srcObject = stream;
+                    video.play();
+
+                    // Quagga start করো
+                    startMedicineQuagga();
+                })
+                .catch(function (err) {
+                    console.error('Camera error:', err);
+                    scanModal.hide();
+                    if (typeof toastr !== 'undefined') {
+                        toastr.warning(
+                            'Camera access denied!\n' +
+                            'Please use USB scanner or ' +
+                            'type barcode manually.');
+                    }
+                });
+        }
+
+        // ── Quagga Init ─────────────────────────────────
+        function startMedicineQuagga() {
+            Quagga.init({
+                inputStream: {
+                    name: 'Live',
+                    type: 'LiveStream',
+                    target: document.getElementById(
+                        'medicineCamera'),
+                    constraints: {
+                        facingMode: 'environment'
+                    }
+                },
+                decoder: {
+                    readers: [
+                        'ean_reader',
+                        'ean_8_reader',
+                        'code_128_reader',
+                        'code_39_reader',
+                        'upc_reader',
+                        'upc_e_reader',
+                        'codabar_reader'
+                    ]
+                },
+                locate: true
+            }, function (err) {
+                if (err) {
+                    console.error('Quagga error:', err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            // Barcode detected!
+            Quagga.onDetected(function (result) {
+                if (medScanCooldown) return;
+
+                var code = result.codeResult.code;
+                if (!code || code.length < 3) return;
+
+                medScanCooldown = true;
+                scannedBarcode = code;
+
+                playBeep();
+                stopMedicineCamera(false);
+                showScanResult(code);
+            });
+        }
+
+        // ── Show Scan Result ────────────────────────────
+        function showScanResult(code) {
+            document.getElementById('modalCameraArea')
+                .style.display = 'none';
+            document.getElementById('scanSuccessArea')
+                .style.display = 'block';
+            document.getElementById('scannedCodeDisplay')
+                .textContent = code;
+        }
+
+        // ── Confirm Use Barcode ─────────────────────────
+        function confirmBarcode() {
+            if (!scannedBarcode) return;
+
+            // Barcode field এ বসাও
+            document.getElementById('barcodeField')
+                .value = scannedBarcode;
+
+            // Visual feedback
+            var field = document.getElementById('barcodeField');
+            field.style.borderColor = '#1a8a5a';
+            field.style.background = '#e8f5ee';
+
+            setTimeout(function () {
+                field.style.borderColor = '';
+                field.style.background = '';
+            }, 2000);
+
+            closeBarcodeScanner();
+            if (typeof toastr !== 'undefined') {
+                toastr.success(
+                    'Barcode added: ' + scannedBarcode);
+            }
+        }
+
+        // ── Rescan ──────────────────────────────────────
+        function rescan() {
+            scannedBarcode = '';
+            medScanCooldown = false;
+
+            document.getElementById('modalCameraArea')
+                .style.display = 'block';
+            document.getElementById('scanSuccessArea')
+                .style.display = 'none';
+
+            startMedicineCamera();
+        }
+
+        // ── Stop Camera ─────────────────────────────────
+        function stopMedicineCamera(hideModal) {
+            if (medCameraStream) {
+                medCameraStream.getTracks()
+                    .forEach(function (t) { t.stop(); });
+                medCameraStream = null;
+            }
+
+            try {
+                if (typeof Quagga !== 'undefined') {
+                    Quagga.stop();
+                }
+            } catch (e) { }
+            medScanCooldown = false;
+        }
+
+        // ── Close Modal ─────────────────────────────────
+        function closeBarcodeScanner() {
+            stopMedicineCamera(true);
+            if (scanModal) scanModal.hide();
+        }
+
+        // Modal বন্ধ হলে camera বন্ধ করো
+        var modalElement = document.getElementById('barcodeScanModal');
+        if (modalElement) {
+            modalElement.addEventListener('hidden.bs.modal',
+                function () {
+                    stopMedicineCamera(false);
+                    medScanCooldown = false;
+                });
+        }
+
+        // Page ছাড়লে camera বন্ধ করো
+        window.addEventListener('beforeunload',
+            function () {
+                stopMedicineCamera(false);
+            });
+
+        // ── Beep Sound ──────────────────────────────────
+        function playBeep() {
+            try {
+                var ctx = new (window.AudioContext ||
+                    window.webkitAudioContext)();
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 1800;
+                osc.type = 'square';
+                gain.gain.value = 0.3;
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) { }
+        }
+    </script>
+}

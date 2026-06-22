@@ -1,0 +1,606 @@
+﻿@model PharmacyProMS.ViewModels.DashboardViewModel
+
+@{
+    ViewBag.Title = "Dashboard";
+
+    string salesJson = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.MonthlySales
+            .Select(m => m.Amount).ToList());
+    string purchaseJson = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.MonthlyPurchases
+            .Select(m => m.Amount).ToList());
+    string labelsJson = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.MonthlySales
+            .Select(m => m.Month).ToList());
+    string topMedNames = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.TopMedicines
+            .Select(m => m.MedicineName).ToList());
+    string topMedQty = Newtonsoft.Json.JsonConvert
+        .SerializeObject(Model.TopMedicines
+            .Select(m => m.TotalQty).ToList());
+}
+
+@* ── Page Header ── *@
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-tachometer-alt me-2"
+               style="color:#1a8a5a"></i>
+            Dashboard
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item active">Home</li>
+        </ol>
+    </div>
+    <div class="text-muted small">
+        <i class="fas fa-calendar me-1"></i>
+        @DateTime.Today.ToString("dd MMMM yyyy")
+    </div>
+</div>
+
+@* ── Today Summary ── *@
+@* ── Today Summary Cards ── *@
+<div class="row g-3 mb-4">
+
+    @* Card 1 — Today Sales *@
+    <div class="col-6 col-md-3">
+        <div class="card p-3"
+             style="border-left:4px solid #1a8a5a">
+            <div class="d-flex justify-content-between
+                        align-items-start">
+                <div>
+                    <div class="text-muted small fw-semibold
+                                text-uppercase">
+                        Today's Sales
+                    </div>
+                    <div style="font-size:24px;font-weight:700;
+                                color:#1a8a5a">
+                        ৳ @String.Format("{0:N0}",
+                          Model.TodaySaleAmount)
+                    </div>
+                    <div class="text-muted small mt-1">
+                        @Model.TodaySaleCount invoices
+                    </div>
+                </div>
+                <div style="width:50px;height:50px;
+                            background:#e8f5ee;
+                            border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-shopping-bag"
+                       style="color:#1a8a5a;font-size:20px"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Card 2 — Today Purchase *@
+    <div class="col-6 col-md-3">
+        <div class="card p-3"
+             style="border-left:4px solid #2196f3">
+            <div class="d-flex justify-content-between
+                        align-items-start">
+                <div>
+                    <div class="text-muted small fw-semibold
+                                text-uppercase">
+                        Today's Purchase
+                    </div>
+                    <div style="font-size:24px;font-weight:700;
+                                color:#2196f3">
+                        ৳ @String.Format("{0:N0}",
+                          Model.TodayPurchaseAmount)
+                    </div>
+                    <div class="text-muted small mt-1">
+                        &nbsp;
+                    </div>
+                </div>
+                <div style="width:50px;height:50px;
+                            background:#e3f2fd;
+                            border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-cart-arrow-down"
+                       style="color:#2196f3;font-size:20px"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Card 3 — Today Profit *@
+    <div class="col-6 col-md-3">
+        <div class="card p-3"
+             style="border-left:4px solid #4caf50">
+            <div class="d-flex justify-content-between
+                        align-items-start">
+                <div>
+                    <div class="text-muted small fw-semibold
+                                text-uppercase">
+                        Today's Profit
+                    </div>
+                    <div style="font-size:24px;font-weight:700;
+                                color:#4caf50">
+                        ৳ @String.Format("{0:N0}",
+                          Model.TodayProfit)
+                    </div>
+                    <div class="text-muted small mt-1">
+                        &nbsp;
+                    </div>
+                </div>
+                <div style="width:50px;height:50px;
+                            background:#e8f5e9;
+                            border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-coins"
+                       style="color:#4caf50;font-size:20px"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Card 4 — Total Medicines *@
+    <div class="col-6 col-md-3">
+        <div class="card p-3"
+             style="border-left:4px solid #ff9800">
+            <div class="d-flex justify-content-between
+                        align-items-start">
+                <div>
+                    <div class="text-muted small fw-semibold
+                                text-uppercase">
+                        Total Medicines
+                    </div>
+                    <div style="font-size:24px;font-weight:700;
+                                color:#ff9800">
+                        @Model.TotalMedicines
+                    </div>
+                    <div class="text-muted small mt-1">
+                        Active medicines
+                    </div>
+                </div>
+                <div style="width:50px;height:50px;
+                            background:#fff3e0;
+                            border-radius:12px;
+                            display:flex;align-items:center;
+                            justify-content:center">
+                    <i class="fas fa-pills"
+                       style="color:#ff9800;font-size:20px"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Alert Cards ── *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #dc3545">
+            <div style="font-size:28px;font-weight:700;
+                        color:#dc3545">
+                @Model.OutOfStockCount
+            </div>
+            <div class="text-muted small">Out of Stock</div>
+            <a href="@Url.Action("Index","Medicine",
+                new { filterStock = "out" })"
+               class="btn btn-sm btn-outline-danger mt-2">
+                View
+            </a>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #ffc107">
+            <div style="font-size:28px;font-weight:700;
+                        color:#ffc107">
+                @Model.LowStockCount
+            </div>
+            <div class="text-muted small">Low Stock</div>
+            <a href="@Url.Action("Index","Medicine",
+                new { filterStock = "low" })"
+               class="btn btn-sm btn-outline-warning mt-2">
+                View
+            </a>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #ff5722">
+            <div style="font-size:28px;font-weight:700;
+                        color:#ff5722">
+                @Model.ExpiringCount
+            </div>
+            <div class="text-muted small">
+                Expiring (90 days)
+            </div>
+            <a href="@Url.Action("Expiry","Report")"
+               class="btn btn-sm btn-outline-danger mt-2">
+                View
+            </a>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #9c27b0">
+            <div style="font-size:28px;font-weight:700;
+                        color:#9c27b0">
+                @Model.ExpiredCount
+            </div>
+            <div class="text-muted small">
+                Expired Batches
+            </div>
+            <a href="@Url.Action("Expiry","Report",
+                new { filter = "expired" })"
+               class="btn btn-sm btn-outline-danger mt-2">
+                View
+            </a>
+        </div>
+    </div>
+
+    @* Alert Cards row এ add করো *@
+    <div class="col-md-3">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #e91e63">
+            <div style="font-size:20px;font-weight:700;
+                    color:#e91e63">
+                ৳ @String.Format("{0:N2}",
+                (decimal)(ViewBag.TotalCustomerDue ?? 0))
+            </div>
+            <div class="text-muted small">
+                Customer Due
+            </div>
+            <a href="@Url.Action("Index","CustomerLedger")"
+               class="btn btn-sm btn-outline-danger mt-2">
+                View
+            </a>
+        </div>
+    </div>
+
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center"
+             style="border-top:3px solid #ff5722">
+            <div style="font-size:20px;font-weight:700;
+                    color:#ff5722">
+                ৳ @String.Format("{0:N2}",
+                  (decimal)(ViewBag.SupplierDue ?? 0))
+            </div>
+            <div class="text-muted small">Supplier Due</div>
+            <a href="@Url.Action("Index","SupplierLedger")"
+               class="btn btn-sm btn-outline-danger mt-2">
+                View
+            </a>
+        </div>
+    </div>
+
+
+</div>
+
+@* ── Charts Row ── *@
+<div class="row g-3 mb-4">
+    @* Monthly Sales vs Purchase Chart *@
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>
+                Last 6 Months — Sales vs Purchase
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart"
+                        style="max-height:250px"></canvas>
+            </div>
+        </div>
+    </div>
+
+    @* Top Medicines Chart *@
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>
+                Top Medicines (This Month)
+            </div>
+            <div class="card-body">
+                @if (Model.TopMedicines.Any())
+                {
+                    <canvas id="topMedChart"
+                            style="max-height:200px"></canvas>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4">
+                        No sales this month
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Bottom Row ── *@
+<div class="row g-3">
+
+    @* Recent Sales *@
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header d-flex
+                        justify-content-between">
+                <span>
+                    <i class="fas fa-history me-2"></i>
+                    Recent Sales
+                </span>
+                <a href="@Url.Action("Index","Sale")"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.RecentSales.Any())
+                        {
+                            <tr>
+                                <td colspan="4"
+                                    class="text-center
+                                           text-muted py-3">
+                                    No sales yet
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var s in Model.RecentSales)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="fw-semibold"
+                                          style="color:#1a8a5a;
+                                                 font-size:12px">
+                                        @s.InvoiceNumber
+                                    </span>
+                                </td>
+                                <td class="small">
+                                    @s.CustomerName
+                                </td>
+                                <td class="fw-semibold small">
+                                    ৳ @s.NetAmount.ToString("N0")
+                                </td>
+                                <td class="text-muted small">
+                                    @s.SaleDate.ToString("dd MMM",
+    System.Globalization.CultureInfo.InvariantCulture)
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* Expiring Batches *@
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex
+                        justify-content-between">
+                <span>
+                    <i class="fas fa-calendar-times me-2"
+                       style="color:#dc3545"></i>
+                    Expiring Soon
+                </span>
+                <a href="@Url.Action("Expiry","Report")"
+                   class="btn btn-sm btn-outline-danger">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Expiry</th>
+                            <th>Days</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.ExpiringBatches.Any())
+                        {
+                            <tr>
+                                <td colspan="3"
+                                    class="text-center
+                                           text-muted py-3">
+                                    No expiring batches
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var b in Model.ExpiringBatches)
+                        {
+                            string badgeClass = b.DaysLeft <= 30
+                                ? "bg-danger"
+                                : b.DaysLeft <= 60
+                                    ? "bg-warning" : "bg-info";
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold small">
+                                        @b.MedicineName
+                                    </div>
+                                    <small class="text-muted">
+                                        @b.BatchNumber
+                                    </small>
+                                </td>
+                                <td class="small">
+                                    
+
+                                    @b.ExpiryDate.ToString("dd MMM yy",
+System.Globalization.CultureInfo.InvariantCulture)
+                                </td>
+                                <td>
+                                    <span class="badge @badgeClass">
+                                        @b.DaysLeft d
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* Low Stock *@
+    <div class="col-6 col-md-3">
+        <div class="card">
+            <div class="card-header d-flex
+                        justify-content-between">
+                <span>
+                    <i class="fas fa-exclamation-triangle
+                               me-2"
+                       style="color:#ffc107"></i>
+                    Low Stock
+                </span>
+                <a href="@Url.Action("Stock","Report")"
+                   class="btn btn-sm btn-outline-warning">
+                    View
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.LowStockMedicines.Any())
+                        {
+                            <tr>
+                                <td colspan="2"
+                                    class="text-center
+                                           text-muted py-3">
+                                    All stocks OK ✅
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var m in
+                            Model.LowStockMedicines)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold small">
+                                        @m.MedicineName
+                                    </div>
+                                    <small class="text-muted">
+                                        @m.CompanyName
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge @(m.CurrentStock==0
+                                        ?"bg-danger":"bg-warning")">
+                                        @m.CurrentStock
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script>
+    // ── Sales vs Purchase Chart ────────────────────────
+    var labels    = @Html.Raw(labelsJson);
+    var salesData = @Html.Raw(salesJson);
+    var purData   = @Html.Raw(purchaseJson);
+
+    new Chart(
+        document.getElementById('salesChart'),
+        {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Sales (৳)',
+                        data: salesData,
+                        backgroundColor:
+                            'rgba(26,138,90,0.7)',
+                        borderColor: '#1a8a5a',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Purchase (৳)',
+                        data: purData,
+                        backgroundColor:
+                            'rgba(33,150,243,0.7)',
+                        borderColor: '#2196f3',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(v) {
+                                return '৳' +
+                                    v.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    // ── Top Medicines Chart ────────────────────────────
+    @if (Model.TopMedicines.Any())
+    {
+        <text>
+        var topNames = @Html.Raw(topMedNames);
+        var topQtys  = @Html.Raw(topMedQty);
+
+        new Chart(
+            document.getElementById('topMedChart'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: topNames,
+                    datasets: [{
+                        data: topQtys,
+                        backgroundColor: [
+                            '#1a8a5a','#2196f3',
+                            '#ff9800','#e91e63','#9c27b0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 } }
+                        }
+                    }
+                }
+            }
+        );
+        </text>
+    }
+    </script>
+}

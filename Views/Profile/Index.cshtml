@@ -1,0 +1,211 @@
+﻿@model PharmacyProMS.ViewModels.ProfileViewModel
+@{
+    ViewBag.Title = "My Profile";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-user-circle me-2"
+               style="color:#1a8a5a"></i>
+            My Profile
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">
+                    Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active">Profile</li>
+        </ol>
+    </div>
+    <a href="@Url.Action("ChangePassword")"
+       class="btn btn-outline-warning">
+        <i class="fas fa-key me-1"></i>
+        Change Password
+    </a>
+</div>
+
+<div class="row g-3 justify-content-center">
+
+    @* Left — Avatar Card *@
+    <div class="col-md-4">
+        <div class="card text-center p-4">
+
+            @* Profile Picture *@
+            <div class="mb-3">
+                @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                {
+                    <img src="@Model.ProfilePicture"
+                         id="profilePreview"
+                         style="width:120px;height:120px;
+                                border-radius:50%;
+                                object-fit:cover;
+                                border:4px solid #1a8a5a" />
+                }
+                else
+                {
+                    <div id="profilePreview"
+                         style="width:120px;height:120px;
+                                background:#e8f5ee;
+                                border-radius:50%;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                margin:0 auto;
+                                border:4px solid #1a8a5a">
+                        <span style="font-size:40px;
+                                     font-weight:700;
+                                     color:#1a8a5a">
+                            @(Model.FullName != null
+                                ? Model.FullName
+                                    .Substring(0,1).ToUpper()
+                                : "U")
+                        </span>
+                    </div>
+                }
+            </div>
+
+            <h5 class="fw-bold mb-1">@Model.FullName</h5>
+            <p class="text-muted mb-2">@Model.Email</p>
+
+            @{
+                string roleClass = Model.Role == "Admin"
+                    ? "bg-danger"
+                    : Model.Role == "Pharmacist"
+                        ? "bg-primary" : "bg-secondary";
+            }
+            <span class="badge @roleClass mb-3">
+                @Model.Role
+            </span>
+
+            <div class="text-muted small">
+                <i class="fas fa-calendar me-1"></i>
+                Joined: @Model.CreatedAt
+            </div>
+        </div>
+    </div>
+
+    @* Right — Edit Form *@
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit me-2"></i>
+                Edit Profile
+            </div>
+            <div class="card-body p-4">
+
+                @using (Html.BeginForm("Index", "Profile",
+                    FormMethod.Post,
+                    new { enctype = "multipart/form-data" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Id)
+                    @Html.ValidationSummary(false, "",
+                        new { @class = "alert alert-danger" })
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Full Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.FullName,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "Your name"
+                                     })
+                            @Html.ValidationMessageFor(
+                                m => m.FullName, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Phone
+                            </label>
+                            @Html.TextBoxFor(m => m.Phone,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      placeholder = "01XXXXXXXXX"
+                                     })
+                            @Html.ValidationMessageFor(
+                                m => m.Phone, "",
+                                new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Email
+                            </label>
+                            @Html.TextBoxFor(m => m.Email,
+                                new
+                                     {
+                                         @class = "form-control",
+                                      disabled = "disabled"
+                                     })
+                            <small class="text-muted">
+                                Email change করা যাবে না
+                            </small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Profile Picture
+                            </label>
+                            <input type="file"
+                                   name="PictureFile"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewPic(this)" />
+                            <small class="text-muted">
+                                JPG, PNG — Max 2MB
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            Save Changes
+                        </button>
+                        <a href="@Url.Action("Index","Dashboard")"
+                           class="btn btn-outline-secondary px-4">
+                            Cancel
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewPic(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var prev = document.getElementById(
+                        'profilePreview');
+                    if (prev.tagName === 'IMG') {
+                        prev.src = e.target.result;
+                    } else {
+                        prev.outerHTML =
+                            '<img id="profilePreview" src="'
+                            + e.target.result
+                            + '" style="width:120px;height:120px;'
+                            + 'border-radius:50%;object-fit:cover;'
+                            + 'border:4px solid #1a8a5a;'
+                            + 'margin:0 auto" />';
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

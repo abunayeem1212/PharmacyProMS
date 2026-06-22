@@ -1,0 +1,504 @@
+﻿@model PharmacyProMS.ViewModels.MedicineListViewModel
+@{
+    ViewBag.Title = "Medicines";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-pills me-2" style="color:#1a8a5a"></i>
+            Medicine Management
+        </h4>
+        <ol class="breadccrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item active">Medicines</li>
+        </ol>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Add Medicine
+    </a>
+</div>
+
+@* ── Stats ── *@
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center py-3">
+            <div style="font-size:26px;font-weight:700;color:#1a8a5a">
+                @Model.TotalCount
+            </div>
+            <div class="text-muted small">Total Medicines</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center py-3">
+            <div style="font-size:26px;font-weight:700;color:#28a745">
+                @Model.Medicines.Count(m => m.CurrentStock > m.ReOrderLevel)
+            </div>
+            <div class="text-muted small">In Stock</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center py-3">
+            <div style="font-size:26px;font-weight:700;color:#ffc107">
+                @Model.Medicines.Count(m =>
+                    m.CurrentStock <= m.ReOrderLevel &&
+                    m.CurrentStock > 0)
+            </div>
+            <div class="text-muted small">Low Stock</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center py-3">
+            <div style="font-size:26px;font-weight:700;color:#dc3545">
+                @Model.Medicines.Count(m => m.CurrentStock == 0)
+            </div>
+            <div class="text-muted small">Out of Stock</div>
+        </div>
+    </div>
+</div>
+
+@* ── Filter Bar ── *@
+<div class="card mb-3">
+    <div class="card-body py-3">
+        @using (Html.BeginForm("Index", "Medicine",
+            FormMethod.Get,
+            new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    @Html.TextBox("searchTerm", Model.SearchTerm,
+                        new
+                             {
+                                 @class = "form-control",
+                              placeholder = "Name, generic, barcode..."
+                             })
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Company
+                </label>
+                @Html.DropDownList("filterCompany",
+                    new SelectList(Model.Companies,
+                        "CompanyId", "CompanyName",
+                        Model.FilterCompany),
+                    "All Companies",
+                    new { @class = "form-select" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Category
+                </label>
+                @Html.DropDownList("filterCategory",
+                    new SelectList(Model.Categories,
+                        "CategoryId", "CategoryName",
+                        Model.FilterCategory),
+                    "All Categories",
+                    new { @class = "form-select" })
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold small">
+                    Stock Status
+                </label>
+                @Html.DropDownList("filterStock",
+                    new SelectList(new[]
+                    {
+                        new { Value = "",    Text = "All" },
+                        new { Value = "ok",  Text = "✅ In Stock" },
+                        new { Value = "low", Text = "⚠️ Low Stock" },
+                        new { Value = "out", Text = "❌ Out of Stock" }
+                    }, "Value", "Text", Model.FilterStock),
+                    new { @class = "form-select" })
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label fw-semibold small">Sort</label>
+                @Html.DropDownList("sortBy",
+                    new SelectList(new[]
+                    {
+                        new { Value="MedicineName",  Text="Name" },
+                        new { Value="SalePrice",     Text="Price" },
+                        new { Value="CurrentStock",  Text="Stock" },
+                        new { Value="Company",       Text="Company" }
+                    }, "Value", "Text", Model.SortBy),
+                    new { @class = "form-select" })
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <a href="@Url.Action("Index")"
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@* ── Table ── *@
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <span>
+            <i class="fas fa-list me-2"></i> Medicine List
+            <span class="badge ms-2"
+                  style="background:#e8f5ee;color:#1a8a5a">
+                @Model.TotalCount Records
+            </span>
+        </span>
+        <small class="text-muted">
+            Page @Model.CurrentPage of @Model.TotalPages
+        </small>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table id="medicineTable"
+                   class="table table-hover w-100">
+                <thead>
+                    <tr>
+                        <th style="width:45px">#</th>
+                        <th style="width:60px">Image</th>
+                        <th>
+                            <a href="@Url.Action("Index", new {
+                                searchTerm     = Model.SearchTerm,
+                                filterCompany  = Model.FilterCompany,
+                                filterCategory = Model.FilterCategory,
+                                filterStock    = Model.FilterStock,
+                                sortBy         = "MedicineName",
+                                sortOrder      = Model.SortBy=="MedicineName"
+                                    && Model.SortOrder=="asc"?"desc":"asc"})"
+                               class="text-decoration-none text-dark">
+                                Medicine Name
+                                @if (Model.SortBy == "MedicineName")
+                                {
+                                    <i class="fas fa-sort-@(Model.SortOrder=="asc"?"up":"down") ms-1"
+                                       style="color:#1a8a5a"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>Company</th>
+                        <th>Category</th>
+                        <th>
+                            <a href="@Url.Action("Index", new {
+                                searchTerm     = Model.SearchTerm,
+                                filterCompany  = Model.FilterCompany,
+                                filterCategory = Model.FilterCategory,
+                                filterStock    = Model.FilterStock,
+                                sortBy         = "SalePrice",
+                                sortOrder      = Model.SortBy=="SalePrice"
+                                    && Model.SortOrder=="asc"?"desc":"asc"})"
+                               class="text-decoration-none text-dark">
+                                Price
+                                @if (Model.SortBy == "SalePrice")
+                                {
+                                    <i class="fas fa-sort-@(Model.SortOrder=="asc"?"up":"down") ms-1"
+                                       style="color:#1a8a5a"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@Url.Action("Index", new {
+                                searchTerm     = Model.SearchTerm,
+                                filterCompany  = Model.FilterCompany,
+                                filterCategory = Model.FilterCategory,
+                                filterStock    = Model.FilterStock,
+                                sortBy         = "CurrentStock",
+                                sortOrder      = Model.SortBy=="CurrentStock"
+                                    && Model.SortOrder=="asc"?"desc":"asc"})"
+                               class="text-decoration-none text-dark">
+                                Stock
+                                @if (Model.SortBy == "CurrentStock")
+                                {
+                                    <i class="fas fa-sort-@(Model.SortOrder=="asc"?"up":"down") ms-1"
+                                       style="color:#1a8a5a"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>Rx</th>
+                        <th>Status</th>
+                        <th style="width:130px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Medicines.Any())
+                    {
+                        <tr>
+                            <td colspan="10"
+                                class="text-center py-5">
+                                <i class="fas fa-inbox"
+                                   style="font-size:40px;color:#ddd"></i>
+                                <p class="text-muted mt-2">
+                                    No medicines found
+                                </p>
+                            </td>
+                        </tr>
+                    }
+                    @{ int sl = (Model.CurrentPage - 1) * Model.PageSize + 1; }
+                    @foreach (var item in Model.Medicines)
+                    {
+                        <tr id="row-@item.MedicineId">
+                            <td class="text-muted">@sl</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.ImagePath))
+                                {
+                                    <img src="@item.ImagePath"
+                                         style="width:38px;height:38px;
+                                                border-radius:8px;
+                                                object-fit:cover" />
+                                }
+                                else
+                                {
+                                    <div style="width:38px;height:38px;
+                                                background:#e8f5ee;
+                                                border-radius:8px;
+                                                display:flex;
+                                                align-items:center;
+                                                justify-content:center">
+                                        <i class="fas fa-pills"
+                                           style="color:#1a8a5a;
+                                                  font-size:14px"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-semibold">
+                                    @item.MedicineName
+                                </div>
+                                <small class="text-muted">
+                                    @item.GenericName
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      style="background:#e8f5ee;
+                                             color:#1a8a5a;
+                                             font-size:11px">
+                                    @(item.Company != null ? item.Company.CompanyName : "—")
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    @(item.Category != null ? item.Category.CategoryName : "—")
+                                </small>
+                            </td>
+                            <td class="fw-semibold">
+                                ৳ @item.SalePrice.ToString("N2")
+                            </td>
+                            <td>
+                                @{
+                                    string stockClass = "bg-success";
+                                    string stockText = item.CurrentStock
+                                                            .ToString();
+                                    if (item.CurrentStock == 0)
+                                    {
+                                        stockClass = "bg-danger";
+                                        stockText = "Out";
+                                    }
+                                    else if (item.CurrentStock <=
+                                             item.ReOrderLevel)
+                                    {
+                                        stockClass = "bg-warning";
+                                    }
+                                }
+                                <span class="badge @stockClass">
+                                    @stockText
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.IsPrescriptionRequired)
+                                {
+                                    <span class="badge bg-info"
+                                          title="Prescription Required">
+                                        Rx
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @(item.IsActive
+                                    ? "bg-success":"bg-secondary")"
+                                      style="cursor:pointer"
+                                      onclick="toggleMed(
+                                          @item.MedicineId, this)">
+                                    @(item.IsActive?"Active":"Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="@Url.Action("Details",
+                                        new{id=item.MedicineId})"
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="@Url.Action("Edit",
+                                        new{id=item.MedicineId})"
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <a href="@Url.Action("Create","StockAdjustment",
+                                        new{medicineId=item.MedicineId})"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Adjust Stock">
+                                        <i class="fas fa-sliders-h"></i>
+                                    </a>
+
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete(@item.MedicineId,
+                                             '@item.MedicineName', 'Medicine')"
+                                            title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        sl++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @* ── Pagination ── *@
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between">
+            <small class="text-muted">
+                Showing @((Model.CurrentPage-1)*Model.PageSize+1)
+                to @(Math.Min(
+                    Model.CurrentPage*Model.PageSize,
+                    Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item
+                    @(Model.CurrentPage==1?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm     = Model.SearchTerm,
+                           sortBy         = Model.SortBy,
+                           sortOrder      = Model.SortOrder,
+                           filterCompany  = Model.FilterCompany,
+                           filterCategory = Model.FilterCategory,
+                           filterStock    = Model.FilterStock,
+                           page           = Model.CurrentPage-1 })">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item
+                        @(i==Model.CurrentPage?"active":"")">
+                        <a class="page-link"
+                           href="@Url.Action("Index", new {
+                               searchTerm     = Model.SearchTerm,
+                               sortBy         = Model.SortBy,
+                               sortOrder      = Model.SortOrder,
+                               filterCompany  = Model.FilterCompany,
+                               filterCategory = Model.FilterCategory,
+                               filterStock    = Model.FilterStock,
+                               page           = i })">@i</a>
+                        </li>
+                    }
+                <li class="page-item
+                    @(Model.CurrentPage==Model.TotalPages?"disabled":"")">
+                    <a class="page-link"
+                       href="@Url.Action("Index", new {
+                           searchTerm     = Model.SearchTerm,
+                           sortBy         = Model.SortBy,
+                           sortOrder      = Model.SortOrder,
+                           filterCompany  = Model.FilterCompany,
+                           filterCategory = Model.FilterCategory,
+                           filterStock    = Model.FilterStock,
+                           page           = Model.CurrentPage+1 })">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+    @*function deleteMed(id, name) {
+        if (!confirm('Delete "' + name + '"?')) return;
+        $.ajax({
+            url: '@Url.Action("Delete","Medicine")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $('#med-row-' + id).fadeOut(400,
+                        function () { $(this).remove(); });
+                    toastr.success(res.message);
+                } else {
+                    toastr.error(res.message);
+                }
+            }
+        });
+    }*@
+
+   
+    $('#medicineTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1],
+                     [10, 25, 50, "All"]],
+        order:      [[2, 'asc']],
+        columnDefs: [
+            { orderable: false, targets: [1, 7, 8, 9] }
+        ],
+        language: {
+            search:   "🔍 Search:",
+            info:     "Showing _START_ to _END_ of _TOTAL_",
+            paginate: { previous: "‹", next: "›" }
+        }
+    });
+
+    function toggleMed(id, badge) {
+        $.ajax({
+            url: '@Url.Action("ToggleStatus","Medicine")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $(badge)
+                        .toggleClass('bg-success bg-secondary')
+                        .text(res.isActive
+                            ? 'Active' : 'Inactive');
+                    toastr.success(res.message);
+                }
+            }
+        });
+    }
+    
+
+    </script>
+@Html.AntiForgeryToken()
+}

@@ -1,0 +1,230 @@
+﻿@model IEnumerable<PharmacyProMS.Models.MedicineCategory>
+@{
+    ViewBag.Title = "Medicine Categories";
+}
+
+<div class="page-header">
+    <div>
+        <h4>
+            <i class="fas fa-tags me-2" style="color:#1a8a5a"></i>
+            Medicine Categories
+        </h4>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index","Dashboard")">Home</a>
+            </li>
+            <li class="breadcrumb-item active">Categories</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    @* ── Left: Add Form ── *@
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-plus me-2"></i> Add Category
+            </div>
+            <div class="card-body p-4">
+                @using (Html.BeginForm("Create",
+                    "MedicineCategory", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Category Name
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="CategoryName"
+                               class="form-control"
+                               placeholder="e.g. Antibiotic" />
+                    </div>
+
+                    <div class="mb-3 form-check form-switch">
+                        <input type="checkbox" name="IsActive"
+                               value="true"
+                               class="form-check-input"
+                               role="switch"
+                               style="width:50px;height:25px"
+                               checked />
+                        <label class="form-check-label ms-2 fw-semibold">
+                            Is Active
+                        </label>
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>
+                        Save Category
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ── Right: List ── *@
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>
+                    <i class="fas fa-list me-2"></i>
+                    Category List
+                    <span class="badge ms-2"
+                          style="background:#e8f5ee;color:#1a8a5a">
+                        @Model.Count() Records
+                    </span>
+                </span>
+                @* Search *@
+                @using (Html.BeginForm("Index",
+                    "MedicineCategory", FormMethod.Get,
+                    new { @class = "d-flex gap-2" }))
+                {
+                    <input type="text" name="searchTerm"
+                           value="@ViewBag.SearchTerm"
+                           class="form-control form-control-sm"
+                           placeholder="Search..." />
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                }
+            </div>
+            <div class="card-body p-0">
+                <table id="categoryTable"
+                       class="table table-hover w-100">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Category Name</th>
+                            <th>Medicines</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5"
+                                    class="text-center py-4 text-muted">
+                                    No categories found
+                                </td>
+                            </tr>
+                        }
+                        @{ int i = 1; }
+                        @foreach (var item in Model)
+                        {
+                            <tr id="cat-row-@item.CategoryId">
+                                <td>@i</td>
+                                <td class="fw-semibold">
+                                    @item.CategoryName
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          style="background:#e8f5ee;
+                                                 color:#1a8a5a">
+                                        @(item.Medicines?.Count ?? 0)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.IsActive
+                                        ? "bg-success":"bg-secondary")"
+                                          style="cursor:pointer"
+                                          onclick="toggleCat(
+                                              @item.CategoryId, this)">
+                                        @(item.IsActive
+                                            ? "Active":"Inactive")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="@Url.Action("Edit",
+                                            new{id=item.CategoryId})"
+                                           class="btn btn-sm
+                                                  btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm
+                                                       btn-outline-danger"
+                                                onclick="confirmDelete(@item.CategoryId,
+                                                       '@item.CategoryName', 'Category')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+     @*function deleteCat(id, name) {
+        if (!confirm('Delete "' + name + '"?')) return;
+        $.ajax({
+            url: '@Url.Action("Delete","MedicineCategory")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $('#cat-row-' + id).fadeOut(400,
+                        function () { $(this).remove(); });
+                    toastr.success(res.message);
+                } else {
+                    toastr.error(res.message);
+                }
+            }
+        });
+    }*@
+
+    
+    $('#categoryTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        order:      [[1, 'asc']],
+        columnDefs: [
+            { orderable: false, targets: [2, 3, 4] }
+        ],
+        language: {
+            search:   "🔍 Search:",
+            info:     "Showing _START_ to _END_ of _TOTAL_",
+            paginate: { previous: "‹", next: "›" }
+        }
+    });
+
+    function toggleCat(id, badge) {
+        $.ajax({
+            url: '@Url.Action("ToggleStatus",
+                "MedicineCategory")',
+            type: 'POST',
+            data: {
+                id: id,
+                __RequestVerificationToken:
+                    $('input[name="__RequestVerificationToken"]')
+                    .val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    $(badge)
+                        .toggleClass('bg-success bg-secondary')
+                        .text(res.isActive
+                            ? 'Active' : 'Inactive');
+                    toastr.success(res.message);
+                }
+            }
+        });
+    }
+    </script>
+    @Html.AntiForgeryToken()
+}
